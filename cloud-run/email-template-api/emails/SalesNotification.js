@@ -1,6 +1,6 @@
 // cloud-run/email-template-api/emails/SalesNotification.js
 // Gmail-safe: NO Tailwind, NO JS. Table-based + inline styles.
-// Layout/text matches the provided "Hushh Technologies — Weekly Update" template.
+// Matches the provided "Hussh Technologies Email Template Refined" content + UI (light mode look).
 
 const escapeHtml = (val = "") =>
   String(val)
@@ -19,14 +19,13 @@ const stripHtml = (val = "") =>
 export function SalesNotification(input = {}) {
   const d = input || {};
 
-  // Palette from your Tailwind config
+  // Palette (from your tailwind config)
   const C = {
     primary: "#0088cc",
-    backgroundLight: "#f5f7f8",
-    backgroundDark: "#0f1c23",
-    cardDark: "#16252e",
+    bg: "#f5f7f8",
+    card: "#ffffff",
+    border: "#f3f4f6",
 
-    white: "#ffffff",
     gray900: "#111827",
     gray800: "#1f2937",
     gray700: "#374151",
@@ -34,106 +33,123 @@ export function SalesNotification(input = {}) {
     gray500: "#6b7280",
     gray400: "#9ca3af",
     gray300: "#d1d5db",
-    gray200: "#e5e7eb",
-    gray100: "#f3f4f6",
-
-    borderLight: "#f3f4f6",
   };
 
-  // Defaults = EXACT text/content from your HTML
-  const subject = escapeHtml(d.subject ?? "Hushh Technologies — Weekly Update");
-  const previewText = escapeHtml(d.previewText ?? "AI-Driven Future — The Future of Investment Management");
+  // ---- Defaults = EXACT content from your HTML ----
+  const subject = escapeHtml(d.subject ?? "Hussh Technologies");
+  const previewText = escapeHtml(
+    d.previewText ?? "Hussh Technologies — Who we are, inspiration, values, approach."
+  );
 
   const viewInBrowserText = escapeHtml(d.viewInBrowserText ?? "View in browser");
-  const viewInBrowserUrl = escapeHtml(d.viewInBrowserUrl ?? "https://www.hushhtech.com/");
+  const viewInBrowserUrl = escapeHtml(d.viewInBrowserUrl ?? "#");
 
-  const brand = escapeHtml(d.brand ?? "Hushh");
-  const headerRight = escapeHtml(d.headerRight ?? "Weekly Update");
-
-  // Hushh logo from website public folder
-  const heroImageUrl = escapeHtml(
-    d.heroImageUrl ??
-      "https://hushh.ai/images/hushh-logo-new.png"
-  );
-
-  const badgeText = escapeHtml(d.badgeText ?? "AI-Driven Future");
-  const heroTitle = escapeHtml(d.heroTitle ?? "The Future of Investment Management");
-  const heroBody = escapeHtml(
-    d.heroBody ??
-      "Experience the precision of AI-driven portfolios tailored for your growth. Welcome to the new standard of wealth generation."
-  );
+  const brand = escapeHtml(d.brand ?? "Hussh");
+  const siteUrl = escapeHtml(d.siteUrl ?? "https://www.hushhtech.com/");
+  const siteLinkText = escapeHtml(d.siteLinkText ?? "https://www.hushhtech.com/ 🤫");
 
   const whoTitle = escapeHtml(d.whoTitle ?? "Who we are");
-  const whoBody = escapeHtml(
-    d.whoBody ??
-      "Hushh Technologies is a pioneering investment firm leveraging artificial intelligence to navigate complex markets. We bridge the gap between financial expertise and advanced machine learning, creating strategies that adapt in real-time to global economic shifts."
+  const whoP1 = escapeHtml(
+    d.whoP1 ??
+      "Hussh Technologies is an investment management firm that employs human intelligence & psychology along with ai, data, mathematical and statistical methods in the design and execution of its investment programs."
+  );
+  const whoP2 = escapeHtml(
+    d.whoP2 ??
+      "Our mission is to generate sustainable alpha while delivering trust, value, and transparency as an AI powered Berkshire Hathaway."
   );
 
   const inspTitle = escapeHtml(d.inspTitle ?? "Our Inspiration");
-  const inspBody = escapeHtml(
-    d.inspBody ??
-      "We were inspired by the inefficiency of traditional models. The market moves faster than any human can analyze. Our inspiration stems from the desire to harness the raw speed and pattern-recognition capabilities of AI to democratize institutional-grade returns."
-  );
-
-  const valuesTitle = escapeHtml(d.valuesTitle ?? "Core Values");
-  const values =
-    Array.isArray(d.values) && d.values.length
-      ? d.values
+  const inspIntro = escapeHtml(d.inspIntro ?? "We are inspired by the timeless strategies of industry pioneers:");
+  const inspItems =
+    Array.isArray(d.inspItems) && d.inspItems.length
+      ? d.inspItems
       : [
           {
-            title: "Transparency",
-            desc: "Clear insights into every decision our algorithms make.",
+            name: "Renaissance Technologies:",
+            desc: "Quantitative precision and market-leading algorithms.",
           },
           {
-            title: "Innovation",
-            desc: "Constant evolution of our models to stay ahead.",
+            name: "Bridgewater Associates:",
+            desc: "Radical transparency and systematic diversification.",
           },
           {
-            title: "Security",
-            desc: "Bank-grade encryption protecting your assets.",
+            name: "Berkshire Hathaway:",
+            desc: "Long-term value creation driven by Warren Buffett and Charlie Munger's enduring philosophy.",
+          },
+        ];
+
+  const valuesTitle = escapeHtml(d.valuesTitle ?? "Core Values");
+  const valuesItems =
+    Array.isArray(d.valuesItems) && d.valuesItems.length
+      ? d.valuesItems
+      : [
+          {
+            name: "Human-Centered Design:",
+            desc: "Leveraging psychological insights to optimize decision-making.",
+          },
+          {
+            name: "AI-Driven Precision:",
+            desc: "Uncovering market inefficiencies using advanced machine learning and analytics.",
+          },
+          {
+            name: "Quantitative Rigor:",
+            desc: "Applying consistent, scalable, and repeatable strategies backed by mathematics and statistics.",
+          },
+          {
+            name: "Long-Term Thinking:",
+            desc: "Owning the best free cash flow businesses and compounding returns over decades.",
           },
         ];
 
   const approachTitle = escapeHtml(d.approachTitle ?? "Our Approach");
-  const approachBody = escapeHtml(
-    d.approachBody ??
-      "We don't just predict; we react. Our proprietary algorithms analyze millions of data points per second—from market sentiment to geopolitical events. By removing emotional bias, we execute trades with mathematical precision, aiming for consistent growth regardless of market volatility."
-  );
-
-  const whyTitle = escapeHtml(d.whyTitle ?? "Why Hushh Technologies?");
-  const whyBody = escapeHtml(
-    d.whyBody ??
-      "Because your future deserves the smartest tools available. Join a community of forward-thinking investors who trust data over speculation."
-  );
-  const whyButtonText = escapeHtml(d.whyButtonText ?? "Start Your Journey");
-  const whyButtonUrl = escapeHtml(d.whyButtonUrl ?? "https://calendly.com/hushh");
-
-  const whyBgUrl = escapeHtml(
-    d.whyBgUrl ??
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCQOAZ6GvP-sT11v46eTnUL9BIn5ZuBEDQcZ1P6gcx8sBb0_A2gd31fzFhvQNT141qy4hhEISZqtvAVy10Bme1tZVf-4HJbxIZOMjuWyYysjDCiSdWTYwWJ0_tNhQlaOwJVmR_No9WkPpqpOhW_0_CNt7j0kCtjHbZSolY3hP45V1T969K9KMl6xCuzZ0IWnc0wtXI8HXs8eXaoDydLjwkPSw7oHVtihAqqawLjsJgKGfcScZAgqzXNupfpu85JIEbewqPYi9M"
-  );
-
-  const bottomCtaTitle = escapeHtml(d.bottomCtaTitle ?? "Ready to take the next step?");
-  const bottomCtaBody = escapeHtml(
-    d.bottomCtaBody ??
-      "Explore our advanced algorithms or connect directly with our investment team today."
-  );
-  const ctaLeftText = escapeHtml(d.ctaLeftText ?? "Learn More");
-  const ctaLeftUrl = escapeHtml(d.ctaLeftUrl ?? "https://www.hushhtech.com/");
-  const ctaRightText = escapeHtml(d.ctaRightText ?? "Connect Now");
-  const ctaRightUrl = escapeHtml(d.ctaRightUrl ?? "https://calendly.com/hushh");
-
-  const socialLinks =
-    Array.isArray(d.socialLinks) && d.socialLinks.length
-      ? d.socialLinks
+  const approachItems =
+    Array.isArray(d.approachItems) && d.approachItems.length
+      ? d.approachItems
       : [
-          { label: "Website", url: "https://www.hushhtech.com/" },
-          { label: "Email", url: "mailto:hello@hushh.ai" },
-          { label: "Calendly", url: "https://calendly.com/hushh" },
+          {
+            name: "AI Meets Alpha:",
+            desc: "Proprietary algorithms combined with behavioral finance principles to adapt dynamically to markets.",
+          },
+          {
+            name: "Disciplined Execution:",
+            desc: "Fully data-driven processes to eliminate emotional bias.",
+          },
+          {
+            name: "Transparency and Integrity:",
+            desc: "Aligned with Bridgewater's principles, ensuring clarity in performance, risks, and fees.",
+          },
         ];
 
+  const whyTitle = escapeHtml(d.whyTitle ?? "Why Hushh Technologies?");
+  const whyIntro = escapeHtml(d.whyIntro ?? "We are crafting the future of alpha generation by:");
+  const whyItems =
+    Array.isArray(d.whyItems) && d.whyItems.length
+      ? d.whyItems
+      : [
+          {
+            name: "Blending Human Intuition with Machine Intelligence:",
+            desc: "Merging creativity and decision-making with computational power.",
+          },
+          {
+            name: "Setting New Standards in Alpha Creation:",
+            desc: "Emulating the best practices of our role models while innovating.",
+          },
+          {
+            name: "Building Generational Wealth:",
+            desc: "Creating lasting value for investors, employees, and stakeholders.",
+          },
+        ];
+
+  const quoteText = escapeHtml(
+    d.quoteText ?? '"Welcome to the future of investment management, where tradition meets innovation."'
+  );
+
+  const ctaText = escapeHtml(d.ctaText ?? "Connect Now");
+  const ctaUrl = escapeHtml(d.ctaUrl ?? "#");
+
+  const copyrightText = escapeHtml(d.copyrightText ?? "© 2024 Hussh Technologies");
   const footerAddress = escapeHtml(
-    d.footerAddress ?? "Hushh Technologies, 123 Innovation Drive, Tech City, TC 90210"
+    d.footerAddress ?? "Hushh 🤫 Technologies LLC, 1021 5th St W, Kirkland, WA 98033"
   );
   const footerReason = escapeHtml(
     d.footerReason ?? "You are receiving this email because you signed up for our newsletter."
@@ -141,58 +157,45 @@ export function SalesNotification(input = {}) {
   const unsubscribeText = escapeHtml(d.unsubscribeText ?? "Unsubscribe");
   const unsubscribeUrl = escapeHtml(d.unsubscribeUrl ?? "#");
   const privacyText = escapeHtml(d.privacyText ?? "Privacy Policy");
-  const privacyUrl = escapeHtml(d.privacyUrl ?? "https://www.hushhtech.com/");
+  const privacyUrl = escapeHtml(d.privacyUrl ?? "#");
 
-  const valuesCells = values
-    .slice(0, 3)
-    .map((v) => {
-      const title = escapeHtml(v.title ?? "");
-      const desc = escapeHtml(v.desc ?? "");
-      return `
-        <td valign="top" align="center" style="padding:0 10px 0 10px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr>
-              <td align="center" style="padding-bottom:10px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="48" height="48" style="width:48px;height:48px;border-radius:999px;background-color:rgba(0,136,204,0.10);">
-                  <tr>
-                    <td align="center" valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:18px;color:${C.primary};font-weight:900;">
-                      ●
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:16px;color:${C.gray900};font-weight:900;padding-bottom:6px;">
-                ${title}
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;color:${C.gray500};">
-                ${desc}
-              </td>
-            </tr>
-          </table>
-        </td>
-      `;
-    })
-    .join("");
+  // ---- UI helpers for lists (email-safe) ----
+  const bulletRows = (items) =>
+    (items || [])
+      .map((it) => {
+        const name = escapeHtml(it?.name ?? "");
+        const desc = escapeHtml(it?.desc ?? "");
+        return `
+          <tr>
+            <td valign="top" width="18" style="padding:6px 10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:18px;color:${C.gray600};">•</td>
+            <td style="padding:0 0 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:${C.gray600};">
+              <strong style="color:${C.gray900};font-weight:700;">${name}</strong> ${desc}
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
 
-  const socialCells = socialLinks
-    .slice(0, 3)
-    .map((s) => {
-      const url = escapeHtml(s.url ?? "#");
-      // Gmail-safe icon substitute
-      return `
-        <td align="center" style="padding:0 10px;">
-          <a href="${url}" target="_blank" style="text-decoration:none;color:${C.gray400};font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:18px;">
-            ●
-          </a>
-        </td>
-      `;
-    })
-    .join("");
+  const orderedRows = (items) =>
+    (items || [])
+      .map((it, idx) => {
+        const name = escapeHtml(it?.name ?? "");
+        const desc = escapeHtml(it?.desc ?? "");
+        const n = String(idx + 1);
+        return `
+          <tr>
+            <td valign="top" width="26" style="padding:6px 10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:16px;color:${C.gray600};font-weight:700;">
+              ${n}.
+            </td>
+            <td style="padding:0 0 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:${C.gray600};">
+              <strong style="color:${C.gray900};font-weight:700;">${name}</strong> ${desc}
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
 
+  // ---- HTML (structure mirrors your provided UI) ----
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -201,275 +204,215 @@ export function SalesNotification(input = {}) {
     <meta name="x-apple-disable-message-reformatting" />
     <title>${subject}</title>
   </head>
-  <body style="margin:0;padding:0;background-color:${C.backgroundLight};">
-    <!-- Preheader -->
+  <body style="margin:0;padding:0;background-color:${C.bg};">
     <div style="display:none;font-size:1px;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;mso-hide:all;">
       ${previewText}
     </div>
 
-    <!-- View in browser -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${C.backgroundLight};">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${C.bg};">
+      <!-- View in browser -->
       <tr>
-        <td align="center" style="padding:14px 12px 10px 12px;">
+        <td align="center" style="padding:40px 12px 18px 12px;">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;">
             <tr>
-              <td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${C.gray500};">
-                <a href="${viewInBrowserUrl}" target="_blank" style="color:${C.gray500};text-decoration:underline;">${viewInBrowserText}</a>
+              <td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${C.gray400};font-weight:600;">
+                <a href="${viewInBrowserUrl}" target="_blank" style="color:${C.gray400};text-decoration:none;">
+                  ${viewInBrowserText}
+                </a>
               </td>
             </tr>
           </table>
         </td>
       </tr>
-    </table>
 
-    <!-- Main card -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${C.backgroundLight};">
+      <!-- Card -->
       <tr>
-        <td align="center" style="padding:0 12px 40px 12px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background-color:${C.white};border-radius:12px;overflow:hidden;border:1px solid ${C.borderLight};box-shadow:0 14px 30px rgba(0,0,0,0.10);">
+        <td align="center" style="padding:0 12px 20px 12px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600"
+            style="width:600px;max-width:600px;background-color:${C.card};border-radius:16px;overflow:hidden;border:1px solid ${C.border};box-shadow:0 6px 16px rgba(0,0,0,0.06);">
 
-            <!-- Header bar -->
+            <!-- Brand header (centered) -->
             <tr>
-              <td style="padding:24px 24px 18px 24px;border-bottom:1px solid ${C.borderLight};background-color:${C.white};">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <td align="center" style="padding:48px 24px 18px 24px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                   <tr>
-                    <td align="left">
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <td valign="middle" style="padding-right:10px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="36" height="36"
+                        style="width:36px;height:36px;border-radius:8px;background-color:${C.primary};box-shadow:0 10px 22px rgba(0,136,204,0.20);">
                         <tr>
-                          <td valign="middle" style="padding-right:10px;">
-                            <img src="https://hushh.ai/images/hushh-logo-new.png" alt="Hushh" width="32" height="32" style="display:block;border:0;outline:none;text-decoration:none;width:32px;height:32px;border-radius:8px;" />
-                          </td>
-                          <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:22px;color:${C.gray900};font-weight:900;letter-spacing:-0.4px;">
-                            ${brand}<span style="color:${C.primary};">.</span>
+                          <td align="center" valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:20px;color:#ffffff;font-weight:900;">
+                            ▦
                           </td>
                         </tr>
                       </table>
                     </td>
-                    <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${C.gray400};font-weight:700;">
-                      ${headerRight}
+                    <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:26px;color:${C.gray900};font-weight:900;letter-spacing:-0.6px;">
+                      ${brand}<span style="color:${C.primary};">.</span>
                     </td>
                   </tr>
                 </table>
               </td>
             </tr>
 
-            <!-- Hero image -->
+            <!-- Content -->
             <tr>
-              <td style="padding:0;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                  <tr>
-                    <td align="center" style="background-color:${C.primary};padding:40px 20px;">
-                      <img src="${heroImageUrl}" alt="Hushh Technologies" width="120" style="display:block;border:0;outline:none;text-decoration:none;width:120px;height:auto;border-radius:20px;" />
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <!-- Body -->
-            <tr>
-              <td style="padding:32px 32px 10px 32px;">
-
-                <!-- Badge -->
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 14px auto;">
-                  <tr>
-                    <td style="background-color:rgba(0,136,204,0.10);color:${C.primary};font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:12px;font-weight:900;text-transform:uppercase;letter-spacing:2px;padding:8px 12px;border-radius:999px;">
-                      ${badgeText}
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- Title -->
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:36px;line-height:42px;color:${C.gray900};font-weight:900;letter-spacing:-0.8px;text-align:center;margin:0 0 12px 0;">
-                  ${heroTitle}
-                </div>
-
-                <!-- Subtitle -->
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:28px;color:${C.gray600};text-align:center;margin:0 0 18px 0;">
-                  ${heroBody}
-                </div>
-
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                  <tr><td style="height:1px;background-color:${C.borderLight};line-height:1px;font-size:0;">&nbsp;</td></tr>
-                </table>
-
-                <div style="height:18px;line-height:18px;">&nbsp;</div>
+              <td style="padding:0 32px 36px 32px;">
 
                 <!-- Who we are -->
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;color:${C.gray900};font-weight:900;letter-spacing:-0.2px;margin:0 0 8px 0;">
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:32px;line-height:38px;color:${C.gray900};font-weight:900;letter-spacing:-0.6px;margin:0 0 10px 0;">
                   ${whoTitle}
                 </div>
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:26px;color:${C.gray600};margin:0 0 18px 0;">
-                  ${whoBody}
+
+                <div style="margin:0 0 14px 0;">
+                  <a href="${siteUrl}" target="_blank"
+                    style="color:${C.primary};text-decoration:underline;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:600;">
+                    ${siteLinkText}
+                  </a>
                 </div>
 
-                <!-- Inspiration -->
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${C.gray100};border-radius:10px;border:1px solid ${C.borderLight};">
-                  <tr>
-                    <td style="padding:16px 16px 14px 16px;">
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                        <tr>
-                          <td style="padding:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:20px;color:${C.gray900};font-weight:900;">
-                            ${inspTitle}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:26px;color:${C.gray600};">
-                            ${inspBody}
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:${C.gray600};margin:0 0 10px 0;">
+                  ${whoP1}
+                </div>
+
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:${C.gray600};margin:0 0 18px 0;">
+                  ${whoP2}
+                </div>
+
+                <!-- Our Inspiration -->
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;color:${C.gray900};font-weight:800;margin:18px 0 8px 0;">
+                  ${inspTitle}
+                </div>
+
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:${C.gray600};margin:0 0 10px 0;">
+                  ${inspIntro}
+                </div>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 8px 0;">
+                  ${bulletRows(inspItems)}
                 </table>
 
-                <div style="height:20px;line-height:20px;">&nbsp;</div>
-
                 <!-- Core Values -->
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;color:${C.gray900};font-weight:900;letter-spacing:-0.2px;text-align:center;margin:0 0 14px 0;">
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;color:${C.gray900};font-weight:800;margin:18px 0 8px 0;">
                   ${valuesTitle}
                 </div>
 
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 8px 0;">
+                  ${orderedRows(valuesItems)}
+                </table>
+
+                <!-- Our Approach -->
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;color:${C.gray900};font-weight:800;margin:18px 0 8px 0;">
+                  ${approachTitle}
+                </div>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 8px 0;">
+                  ${bulletRows(approachItems)}
+                </table>
+
+                <!-- Why Hushh -->
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;color:${C.gray900};font-weight:800;margin:18px 0 8px 0;">
+                  ${whyTitle}
+                </div>
+
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:${C.gray600};margin:0 0 10px 0;">
+                  ${whyIntro}
+                </div>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 10px 0;">
+                  ${bulletRows(whyItems)}
+                </table>
+
+                <!-- Quote (with top border) -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid ${C.border};margin-top:10px;">
                   <tr>
-                    ${valuesCells}
+                    <td style="padding:16px 0 0 0;">
+                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:28px;color:${C.gray800};font-weight:700;font-style:italic;text-align:center;">
+                        ${quoteText}
+                      </div>
+                    </td>
                   </tr>
                 </table>
 
-                <div style="height:20px;line-height:20px;">&nbsp;</div>
-
-                <!-- Our Approach -->
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;color:${C.gray900};font-weight:900;letter-spacing:-0.2px;margin:0 0 8px 0;">
-                  ${approachTitle}
-                </div>
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:26px;color:${C.gray600};margin:0 0 16px 0;">
-                  ${approachBody}
-                </div>
-
-                <!-- Why block -->
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${C.primary};border-radius:12px;overflow:hidden;">
+                <!-- CTA -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:18px;">
                   <tr>
-                    <td style="padding:0;">
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                        <tr>
-                          <td style="padding:0;background-color:${C.primary};">
-                            <!-- background image (fallback-safe as image) -->
-                            <div style="background-image:url('${whyBgUrl}');background-size:cover;background-position:center;opacity:0.10;height:100px;line-height:100px;font-size:0;">
-                              &nbsp;
-                            </div>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:22px 18px;text-align:center;">
-                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:24px;color:#ffffff;font-weight:900;margin:0 0 10px 0;">
-                        ${whyTitle}
-                      </div>
-                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;color:rgba(255,255,255,0.90);margin:0 0 14px 0;max-width:360px;margin-left:auto;margin-right:auto;">
-                        ${whyBody}
-                      </div>
-                      <a href="${whyButtonUrl}" target="_blank" style="display:inline-block;background-color:#ffffff;color:${C.primary};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:13px;font-weight:900;padding:12px 18px;border-radius:8px;">
-                        ${whyButtonText}
+                    <td align="center">
+                      <a href="${ctaUrl}" target="_blank"
+                        style="display:inline-block;width:100%;max-width:520px;height:56px;line-height:56px;text-align:center;background-color:${C.primary};color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:800;border-radius:10px;box-shadow:0 14px 28px rgba(0,136,204,0.25);">
+                        ${ctaText}
                       </a>
                     </td>
                   </tr>
                 </table>
 
-                <div style="height:22px;line-height:22px;">&nbsp;</div>
-
-                <!-- Bottom CTA -->
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid ${C.borderLight};">
-                  <tr>
-                    <td style="padding:18px 0 0 0;text-align:center;">
-                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;color:${C.gray900};font-weight:900;margin:0 0 8px 0;">
-                        ${bottomCtaTitle}
-                      </div>
-                      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;color:${C.gray500};margin:0 0 14px 0;max-width:420px;margin-left:auto;margin-right:auto;">
-                        ${bottomCtaBody}
-                      </div>
-
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
-                        <tr>
-                          <td style="padding:0 6px 8px 6px;">
-                            <a href="${ctaLeftUrl}" target="_blank" style="display:inline-block;height:48px;line-height:48px;padding:0 18px;border-radius:10px;border:2px solid rgba(0,136,204,0.20);color:${C.primary};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:900;background-color:transparent;">
-                              ${ctaLeftText}
-                            </a>
-                          </td>
-                          <td style="padding:0 6px 8px 6px;">
-                            <a href="${ctaRightUrl}" target="_blank" style="display:inline-block;height:48px;line-height:48px;padding:0 18px;border-radius:10px;background-color:${C.primary};color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:900;box-shadow:0 10px 24px rgba(0,136,204,0.20);">
-                              ${ctaRightText}
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-
-                    </td>
-                  </tr>
-                </table>
-
               </td>
             </tr>
-
-            <!-- Footer -->
-            <tr>
-              <td style="padding:20px 22px;background-color:${C.gray100};border-top:1px solid ${C.borderLight};text-align:center;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 14px auto;">
-                  <tr>
-                    ${socialCells}
-                  </tr>
-                </table>
-
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${C.gray500};margin:0 0 8px 0;">
-                  ${footerAddress}
-                </div>
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${C.gray400};margin:0 0 10px 0;">
-                  ${footerReason}
-                </div>
-
-                <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${C.gray500};font-weight:700;">
-                  <a href="${unsubscribeUrl}" target="_blank" style="color:${C.gray500};text-decoration:underline;">${unsubscribeText}</a>
-                  <span style="color:${C.gray300};padding:0 8px;">•</span>
-                  <a href="${privacyUrl}" target="_blank" style="color:${C.gray500};text-decoration:underline;">${privacyText}</a>
-                </div>
-              </td>
-            </tr>
-
           </table>
+
+          <!-- Footer (outside card, centered, max 400px) -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="400"
+            style="width:400px;max-width:400px;margin-top:18px;">
+            <tr>
+              <td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:14px;color:${C.gray400};font-weight:800;text-transform:uppercase;letter-spacing:3px;padding:0 0 12px 0;">
+                ${copyrightText}
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;color:${C.gray400};padding:0 0 12px 0;">
+                ${footerAddress}<br/>
+                ${footerReason}
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${C.gray400};font-weight:700;">
+                <a href="${unsubscribeUrl}" target="_blank" style="color:${C.gray400};text-decoration:underline;">${unsubscribeText}</a>
+                <span style="color:${C.gray300};padding:0 8px;">•</span>
+                <a href="${privacyUrl}" target="_blank" style="color:${C.gray400};text-decoration:underline;">${privacyText}</a>
+              </td>
+            </tr>
+          </table>
+
         </td>
       </tr>
+
+      <tr><td style="height:16px;line-height:16px;font-size:0;">&nbsp;</td></tr>
     </table>
   </body>
 </html>`;
 
   const text = [
-    `${stripHtml(brand)}. — ${stripHtml(headerRight)}`,
+    `${stripHtml(brand)}.`,
     "",
-    stripHtml(heroTitle),
-    stripHtml(heroBody),
+    stripHtml(whoTitle),
+    stripHtml(siteUrl),
     "",
-    `${stripHtml(whoTitle)}\n${stripHtml(whoBody)}`,
+    stripHtml(whoP1),
     "",
-    `${stripHtml(inspTitle)}\n${stripHtml(inspBody)}`,
+    stripHtml(whoP2),
     "",
-    `${stripHtml(valuesTitle)}\n- ${values
-      .slice(0, 3)
-      .map((v) => `${stripHtml(v.title)}: ${stripHtml(v.desc)}`)
-      .join("\n- ")}`,
+    stripHtml(inspTitle),
+    stripHtml(inspIntro),
+    ...inspItems.map((x) => `- ${stripHtml(x.name)} ${stripHtml(x.desc)}`),
     "",
-    `${stripHtml(approachTitle)}\n${stripHtml(approachBody)}`,
+    stripHtml(valuesTitle),
+    ...valuesItems.map((x, i) => `${i + 1}. ${stripHtml(x.name)} ${stripHtml(x.desc)}`),
     "",
-    `${stripHtml(whyTitle)}\n${stripHtml(whyBody)}\n${stripHtml(whyButtonText)}: ${stripHtml(whyButtonUrl)}`,
+    stripHtml(approachTitle),
+    ...approachItems.map((x) => `- ${stripHtml(x.name)} ${stripHtml(x.desc)}`),
     "",
-    `${stripHtml(bottomCtaTitle)}\n${stripHtml(bottomCtaBody)}\n${stripHtml(ctaLeftText)}: ${stripHtml(
-      ctaLeftUrl
-    )}\n${stripHtml(ctaRightText)}: ${stripHtml(ctaRightUrl)}`,
+    stripHtml(whyTitle),
+    stripHtml(whyIntro),
+    ...whyItems.map((x) => `- ${stripHtml(x.name)} ${stripHtml(x.desc)}`),
     "",
+    stripHtml(quoteText),
+    "",
+    `${stripHtml(ctaText)}: ${stripHtml(ctaUrl)}`,
+    "",
+    stripHtml(copyrightText),
     stripHtml(footerAddress),
     stripHtml(footerReason),
     `${stripHtml(unsubscribeText)}: ${stripHtml(unsubscribeUrl)} | ${stripHtml(privacyText)}: ${stripHtml(privacyUrl)}`,
   ].join("\n");
 
   return { subject, html, text };
-}
+};
