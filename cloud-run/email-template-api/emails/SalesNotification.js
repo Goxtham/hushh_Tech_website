@@ -34,8 +34,9 @@ export function SalesNotification(input = {}) {
     gray300: "#d1d5db",
   };
 
-  // Font stack - Plus Jakarta Sans with fallbacks
-  const fontFamily = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+  // Font stack - Gmail-safe: Plus Jakarta Sans with Google Sans/Roboto fallbacks
+  // Gmail doesn't support webfonts, so we use Google Sans/Roboto as fallbacks
+  const fontFamily = "'Plus Jakarta Sans','Google Sans',Roboto,Arial,Helvetica,sans-serif";
 
   // ---- URLs ----
   const logoUrl = escapeHtml(d.logoUrl ?? "https://ibsisfnjxeowvdtvgzff.supabase.co/storage/v1/object/public/assets/hushh-logo.png");
@@ -289,14 +290,20 @@ export function SalesNotification(input = {}) {
                   </tr>
                 </table>
 
-                <!-- CTA Button -->
+                <!-- CTA Button - Bulletproof table-based centering -->
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:20px;">
                   <tr>
                     <td align="center">
-                      <a href="${calendlyUrl}" target="_blank"
-                        style="display:inline-block;width:100%;max-width:520px;height:56px;line-height:56px;text-align:center;background-color:${C.primary};color:#ffffff;text-decoration:none;font-family:${fontFamily};font-size:18px;font-weight:700;border-radius:12px;box-shadow:0 10px 24px rgba(0,136,204,0.25);">
-                        ${ctaText}
-                      </a>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td align="center" bgcolor="${C.primary}" style="background-color:${C.primary};border-radius:12px;box-shadow:0 10px 24px rgba(0,136,204,0.25);">
+                            <a href="${calendlyUrl}" target="_blank"
+                              style="display:inline-block;padding:16px 48px;font-family:${fontFamily};font-size:18px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">
+                              ${ctaText}
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
@@ -309,13 +316,19 @@ export function SalesNotification(input = {}) {
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="400"
             style="width:400px;max-width:400px;margin-top:24px;">
             
-            <!-- Centered Connect Button in Footer -->
+            <!-- Centered Connect Button in Footer - Bulletproof table-based centering -->
             <tr>
               <td align="center" style="padding:0 0 20px 0;">
-                <a href="${calendlyUrl}" target="_blank"
-                  style="display:inline-block;padding:14px 32px;background-color:${C.primary};color:#ffffff;text-decoration:none;font-family:${fontFamily};font-size:15px;font-weight:600;border-radius:10px;box-shadow:0 8px 20px rgba(0,136,204,0.2);">
-                  ${journeyText}
-                </a>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" bgcolor="${C.primary}" style="background-color:${C.primary};border-radius:10px;box-shadow:0 8px 20px rgba(0,136,204,0.2);">
+                      <a href="${calendlyUrl}" target="_blank"
+                        style="display:inline-block;padding:14px 32px;font-family:${fontFamily};font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px;">
+                        ${journeyText}
+                      </a>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             
