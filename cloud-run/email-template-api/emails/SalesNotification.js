@@ -50,10 +50,10 @@ export function SalesNotification(input = {}) {
   const brand = escapeHtml(d.brand ?? "Hushh");
   const headerRight = escapeHtml(d.headerRight ?? "Weekly Update");
 
-  // Hushh logo from Supabase storage
+  // Hushh logo from website public folder
   const heroImageUrl = escapeHtml(
     d.heroImageUrl ??
-      "https://ibsisfnjxeowvdtvgzff.supabase.co/storage/v1/object/public/assets/hushh-logo.png"
+      "https://hushh.ai/images/hushh-logo-new.png"
   );
 
   const badgeText = escapeHtml(d.badgeText ?? "AI-Driven Future");
@@ -237,7 +237,7 @@ export function SalesNotification(input = {}) {
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                           <td valign="middle" style="padding-right:10px;">
-                            <img src="https://ibsisfnjxeowvdtvgzff.supabase.co/storage/v1/object/public/assets/hushh-logo.png" alt="Hushh" width="32" height="32" style="display:block;border:0;outline:none;text-decoration:none;width:32px;height:32px;border-radius:8px;" />
+                            <img src="https://hushh.ai/images/hushh-logo-new.png" alt="Hushh" width="32" height="32" style="display:block;border:0;outline:none;text-decoration:none;width:32px;height:32px;border-radius:8px;" />
                           </td>
                           <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:22px;color:${C.gray900};font-weight:900;letter-spacing:-0.4px;">
                             ${brand}<span style="color:${C.primary};">.</span>
