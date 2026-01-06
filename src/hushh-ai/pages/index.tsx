@@ -11,6 +11,7 @@ import { THEME, BRANDING, LIMITS } from '../core/constants';
 import type { HushhChat, HushhMessage, MediaLimits, ChatState } from '../core/types';
 import * as service from '../services/hushhAIService';
 import config from '../../resources/config/config';
+import { trackProductUsage, PRODUCTS } from '../../services/productUsage/trackProductUsage';
 
 const MotionBox = motion(Box);
 
@@ -87,6 +88,8 @@ export default function HushhAIPage() {
     const user = await service.getOrCreateUser();
     if (user) {
       setUserId(user.id);
+      // Track product usage for analytics
+      trackProductUsage(PRODUCTS.HUSHH_AI).catch(console.error);
     }
     const [chatList, limits] = await Promise.all([
       service.getChats(),
