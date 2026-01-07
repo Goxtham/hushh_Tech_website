@@ -78,6 +78,7 @@ import DeveloperDocsPage from './pages/developer-docs';
 import HushhAgentMailerPage from './pages/hushh-agent-mailer';
 import MobileBottomNav from './components/MobileBottomNav';
 import HushhAIPage from './hushh-ai/pages';
+import PortfolioWizardPage from './hushh-ai/pages/portfolio';
 import { LoginPage as HushhAILoginPage, SignupPage as HushhAISignupPage } from './hushh-ai/presentation/pages';
 
 // Google Analytics configuration
@@ -428,6 +429,7 @@ function App() {
             <Route path='/developer-docs' element={<DeveloperDocsPage />} />
             <Route path='/hushh-agent-mailer' element={<HushhAgentMailerPage />} />
             <Route path='/hushh-ai' element={<HushhAIPage />} />
+            <Route path='/hushh-ai/portfolio' element={<PortfolioWizardPage />} />
             <Route path='/hushh-ai/login' element={<HushhAILoginPage />} />
             <Route path='/hushh-ai/signup' element={<HushhAISignupPage />} />
           </Routes>
