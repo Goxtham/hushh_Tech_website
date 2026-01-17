@@ -37,6 +37,37 @@ interface ResumeNodeVisionSessionProps {
 
 type SessionPhase = 'coach-select' | 'welcome' | 'calibrating' | 'neural-greeting' | 'resume-upload' | 'vision-active';
 
+// Language configuration for voice session
+type SessionLanguage = 'en' | 'ar' | 'fr' | 'zh' | 'hi';
+
+interface LanguageOption {
+  code: SessionLanguage;
+  name: string;
+  nativeName: string;
+  flag: string;
+  voiceCode: string; // BCP-47 language code for Gemini
+  direction: 'ltr' | 'rtl';
+}
+
+const LANGUAGES: LanguageOption[] = [
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸', voiceCode: 'en-US', direction: 'ltr' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', voiceCode: 'ar-XA', direction: 'rtl' },
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷', voiceCode: 'fr-FR', direction: 'ltr' },
+  { code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳', voiceCode: 'cmn-CN', direction: 'ltr' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', voiceCode: 'hi-IN', direction: 'ltr' },
+];
+
+const getLanguageInstruction = (lang: LanguageOption): string => {
+  const instructions: Record<SessionLanguage, string> = {
+    en: 'Speak and respond in English. Be natural, warm, and engaging.',
+    ar: 'تحدث وارد باللغة العربية. كن طبيعياً ودافئاً وجذاباً. IMPORTANT: Respond in Arabic (العربية). All your speech MUST be in Arabic language.',
+    fr: 'Parlez et répondez en français. Soyez naturel, chaleureux et engageant. IMPORTANT: Respond in French (Français). All your speech MUST be in French language.',
+    zh: '用中文说话和回应。自然、温暖、有吸引力。IMPORTANT: Respond in Chinese (中文). All your speech MUST be in Mandarin Chinese.',
+    hi: 'हिंदी में बोलें और जवाब दें। स्वाभाविक, गर्म और आकर्षक रहें। IMPORTANT: Respond in Hindi (हिन्दी). All your speech MUST be in Hindi language.',
+  };
+  return instructions[lang.code];
+};
+
 const CALIBRATION_STEPS = [
   { id: 'init', label: 'INITIALIZING HUSHH NEURAL CORE', duration: 1200 },
   { id: 'vision', label: 'ACTIVATING VISION INTELLIGENCE', duration: 1500 },
@@ -100,6 +131,7 @@ const ResumeNodeVisionSession: React.FC<ResumeNodeVisionSessionProps> = ({
   // State
   const [phase, setPhase] = useState<SessionPhase>('coach-select');
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>(LANGUAGES[0]); // Default to English
   const [calibrationStep, setCalibrationStep] = useState(0);
   const [emotionalState, setEmotionalState] = useState<EmotionalState | null>(null);
   const [isGeminiConnected, setIsGeminiConnected] = useState(false);
@@ -215,7 +247,15 @@ const ResumeNodeVisionSession: React.FC<ResumeNodeVisionSessionProps> = ({
       // Connect to Gemini 3 Pro - The most intelligent reasoning model
       const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       
+      // Get the language instruction for the selected language
+      const languageInstruction = getLanguageInstruction(selectedLanguage);
+      
       const visionSystemInstruction = `${coach.systemInstruction}
+
+LANGUAGE REQUIREMENT - CRITICAL:
+${languageInstruction}
+The user has selected ${selectedLanguage.name} (${selectedLanguage.nativeName}) as their preferred language.
+You MUST speak and respond ONLY in ${selectedLanguage.name}. This is non-negotiable.
 
 NEURAL VISION PROTOCOL - PHASE 0 (Powered by Gemini 3 Pro):
 You are currently in the Neural Calibration Phase. Your camera uplink is ACTIVE and you can SEE the user.
@@ -569,6 +609,42 @@ Ask them about their current role and career goals instead.`
               ))}
             </div>
 
+            {/* Language Selection */}
+            <div className="max-w-md mx-auto mb-10">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <i className="fas fa-language text-purple-400"></i>
+                <span className="text-[11px] uppercase tracking-[0.2em] text-white/50 font-bold">
+                  Session Language
+                </span>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => setSelectedLanguage(lang)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 ${
+                      selectedLanguage.code === lang.code
+                        ? 'bg-gradient-to-r from-purple-500/30 to-blue-500/30 border-2 border-purple-400/50 scale-105'
+                        : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <span className="text-lg">{lang.flag}</span>
+                    <span className={`text-[11px] font-bold ${
+                      selectedLanguage.code === lang.code ? 'text-white' : 'text-white/60'
+                    }`}>
+                      {lang.nativeName}
+                    </span>
+                    {selectedLanguage.code === lang.code && (
+                      <i className="fas fa-check text-purple-400 text-[10px]"></i>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="text-white/30 text-[10px] mt-3 text-center">
+                Your AI coach will speak and understand {selectedLanguage.name}
+              </p>
+            </div>
+
             <h3 className="font-serif text-2xl md:text-3xl font-bold text-white mb-3">
               Select Your Career Architect
             </h3>
@@ -654,6 +730,13 @@ Ask them about their current role and career goals instead.`
             <p className="text-white/30 text-sm">
               Preparing neural vision for {selectedCoach?.name}
             </p>
+            {/* Language indicator */}
+            <div className="mt-3 flex items-center justify-center gap-2">
+              <span className="text-lg">{selectedLanguage.flag}</span>
+              <span className="text-purple-400 text-[10px] uppercase tracking-[0.2em] font-bold">
+                {selectedLanguage.nativeName}
+              </span>
+            </div>
           </div>
 
           <div className="w-full h-[3px] bg-white/5 relative overflow-hidden rounded-full">
@@ -699,6 +782,13 @@ Ask them about their current role and career goals instead.`
         </div>
         
         <div className="flex items-center gap-4">
+          {/* Language Indicator */}
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-purple-500/30 bg-purple-500/10">
+            <span className="text-sm">{selectedLanguage.flag}</span>
+            <span className="text-[9px] uppercase tracking-[0.2em] text-purple-300 font-black">
+              {selectedLanguage.nativeName}
+            </span>
+          </div>
           <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-white/10">
             <div className={`w-2 h-2 rounded-full ${isGeminiConnected ? 'bg-green-500' : 'bg-yellow-500'} animate-pulse`}></div>
             <span className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-black">
