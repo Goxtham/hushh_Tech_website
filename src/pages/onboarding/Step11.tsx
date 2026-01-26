@@ -235,8 +235,11 @@ function OnboardingStep11() {
     setDob(formatted);
   };
 
-  const isFormValid = ssn.length === 11 && dob.length === 10;
-  const canSkip = dob.length === 10;
+  // SSN is OPTIONAL - user can continue with just DOB
+  // User can continue even while API is loading (manual entry allowed)
+  const isFormValid = dob.length === 10;  // Only DOB is required
+  const hasSSN = ssn.length === 11;
+  const canSkip = dob.length === 10;  // Can skip SSN if DOB is filled
 
   const handleContinue = async () => {
     if (!isFormValid) {

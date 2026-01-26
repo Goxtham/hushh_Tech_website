@@ -1,13 +1,14 @@
 // Hushh DOB Inference API - Supabase Edge Function
-// Uses Gemini 3 Pro Preview via Vertex AI with Google Search grounding
+// Uses Gemini 3 Flash Preview via Vertex AI with Google Search grounding
 // Infers Date of Birth using name, address, and public records
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Google AI Studio Configuration (not Vertex AI - simpler API with Google Search support)
-const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY") || Deno.env.get("GEMINI_API_KEY");
-const MODEL_ID = "gemini-2.0-flash";  // Use production model with search grounding
+// Vertex AI Configuration - Using gemini-3-flash-preview for FASTER response
+const PROJECT_ID = Deno.env.get("GCP_PROJECT_ID") || "hushone-app";
+const MODEL_ID = "gemini-2.5-flash-preview-05-20";  // Gemini 2.5 Flash Preview - FASTER than Pro
+const VERTEX_AI_LOCATION = "us-central1";  // Use regional endpoint for lower latency
 
 interface DobInferenceRequest {
   name: string;
@@ -31,14 +32,134 @@ interface DobInferenceResult {
   reasoning: string;
 }
 
-// Call Google AI Studio API (Generative Language API) with Google Search grounding
-const callGeminiAPI = async (prompt: string): Promise<any> => {
-  if (!GOOGLE_API_KEY) {
-    throw new Error("GOOGLE_API_KEY or GEMINI_API_KEY not configured");
+// Get OAuth access token for Vertex AI (from Service Account)
+const getAccessToken = async (): Promise<string> => {
+  // Try different token sources - check for fresh OAuth token first
+  const accessToken = Deno.env.get("GCP_ACCESS_TOKEN") || Deno.env.get("GOOGLE_ACCESS_TOKEN");
+  if (accessToken && accessToken.length > 50) {
+    console.log("Using GCP_ACCESS_TOKEN from environment");
+    return accessToken;
   }
   
-  // Google AI Studio endpoint (not Vertex AI)
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${GOOGLE_API_KEY}`;
+  // Try to get token from service account JSON
+  const serviceAccountJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
+  if (serviceAccountJson) {
+    try {
+      console.log("Attempting to generate access token from service account...");
+      const sa = JSON.parse(serviceAccountJson);
+      
+      if (!sa.private_key || !sa.client_email) {
+        throw new Error("Service account JSON missing private_key or client_email");
+      }
+      
+      // Generate JWT for OAuth
+      const now = Math.floor(Date.now() / 1000);
+      const header = { alg: "RS256", typ: "JWT" };
+      const payload = {
+        iss: sa.client_email,
+        sub: sa.client_email,
+        scope: "https://www.googleapis.com/auth/cloud-platform",
+        aud: "https://oauth2.googleapis.com/token",
+        iat: now,
+        exp: now + 3600
+      };
+      
+      // Base64URL encode header and payload
+      const encoder = new TextEncoder();
+      const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      const unsignedJwt = `${headerB64}.${payloadB64}`;
+      
+      // Parse the PEM private key properly
+      let privateKeyPem = sa.private_key;
+      if (!privateKeyPem.includes('\n') && privateKeyPem.includes('\\n')) {
+        privateKeyPem = privateKeyPem.replace(/\\n/g, '\n');
+      }
+      
+      // Extract the base64 content between PEM headers
+      const pemHeader = "-----BEGIN PRIVATE KEY-----";
+      const pemFooter = "-----END PRIVATE KEY-----";
+      const startIdx = privateKeyPem.indexOf(pemHeader);
+      const endIdx = privateKeyPem.indexOf(pemFooter);
+      
+      if (startIdx === -1 || endIdx === -1) {
+        throw new Error("Invalid PEM format: missing headers");
+      }
+      
+      const pemBody = privateKeyPem
+        .substring(startIdx + pemHeader.length, endIdx)
+        .replace(/[\r\n\s]/g, '');
+      
+      // Decode base64 to binary
+      const binaryString = atob(pemBody);
+      const binaryKey = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        binaryKey[i] = binaryString.charCodeAt(i);
+      }
+      
+      // Import the private key using Web Crypto API
+      const cryptoKey = await crypto.subtle.importKey(
+        "pkcs8",
+        binaryKey.buffer,
+        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      
+      // Sign the JWT
+      const signature = await crypto.subtle.sign(
+        "RSASSA-PKCS1-v1_5",
+        cryptoKey,
+        encoder.encode(unsignedJwt)
+      );
+      
+      // Base64URL encode the signature
+      const signatureArray = new Uint8Array(signature);
+      let signatureB64 = '';
+      for (let i = 0; i < signatureArray.length; i++) {
+        signatureB64 += String.fromCharCode(signatureArray[i]);
+      }
+      signatureB64 = btoa(signatureB64).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      
+      const signedJwt = `${unsignedJwt}.${signatureB64}`;
+      
+      console.log(`Generated signed JWT for ${sa.client_email}`);
+      
+      // Exchange JWT for access token
+      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${signedJwt}`
+      });
+      
+      const tokenData = await tokenResponse.json();
+      
+      if (tokenData.error) {
+        console.error("Token exchange error:", tokenData.error, tokenData.error_description);
+        throw new Error(`Token exchange failed: ${tokenData.error} - ${tokenData.error_description}`);
+      }
+      
+      if (tokenData.access_token) {
+        console.log("Successfully obtained OAuth access token from service account");
+        return tokenData.access_token;
+      }
+      
+      throw new Error("Token response missing access_token field");
+    } catch (e) {
+      console.error("Failed to get access token from service account:", e);
+      throw e;
+    }
+  }
+  
+  throw new Error("No valid GCP access token found. Please set GCP_ACCESS_TOKEN or GOOGLE_SERVICE_ACCOUNT_JSON");
+};
+
+// Call Vertex AI Gemini API with Google Search grounding
+const callVertexAI = async (prompt: string): Promise<any> => {
+  const accessToken = await getAccessToken();
+  
+  // Vertex AI endpoint as per user's curl example
+  const endpoint = `https://aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${VERTEX_AI_LOCATION}/publishers/google/models/${MODEL_ID}:generateContent`;
   
   const requestBody = {
     contents: [{
@@ -47,12 +168,13 @@ const callGeminiAPI = async (prompt: string): Promise<any> => {
     }],
     generationConfig: {
       temperature: 0.3,  // Lower temperature for factual data
-      maxOutputTokens: 2048,
+      maxOutputTokens: 4096,
     },
-    // Google Search Grounding - same syntax as @google/genai SDK
+    // Google Search Grounding - enables real-time web search
     tools: [{
       googleSearch: {}
     }],
+    // Safety settings
     safetySettings: [
       { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
       { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -61,11 +183,13 @@ const callGeminiAPI = async (prompt: string): Promise<any> => {
     ]
   };
   
-  console.log(`🔍 Calling Google AI Studio (${MODEL_ID}) with Google Search grounding`);
+  console.log(`🔍 Calling Vertex AI (${MODEL_ID}) with Google Search grounding`);
+  console.log(`📡 Endpoint: ${endpoint}`);
   
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
+      "Authorization": `Bearer ${accessToken}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify(requestBody)
@@ -73,14 +197,14 @@ const callGeminiAPI = async (prompt: string): Promise<any> => {
   
   if (!response.ok) {
     const errorText = await response.text();
-    console.error("Google AI Studio Error:", errorText);
-    throw new Error(`Google AI API error: ${response.status} - ${errorText}`);
+    console.error("Vertex AI Error:", errorText);
+    throw new Error(`Vertex AI API error: ${response.status} - ${errorText}`);
   }
   
   return await response.json();
 };
 
-// Parse DOB from Gemini response
+// Parse DOB from Gemini response - Enhanced with multiple format support
 const parseDobResponse = (text: string): DobInferenceResult => {
   const result: DobInferenceResult = {
     dob: null,
@@ -91,8 +215,32 @@ const parseDobResponse = (text: string): DobInferenceResult => {
     reasoning: ""
   };
   
-  // Extract structured data
-  const dobMatch = text.match(/DOB:\s*(\d{4}-\d{2}-\d{2})/i);
+  console.log("🔍 Full Gemini response text:", text);
+  
+  // Try multiple DOB formats
+  // Format 1: DOB: YYYY-MM-DD
+  let dobMatch = text.match(/DOB:\s*(\d{4}-\d{2}-\d{2})/i);
+  
+  // Format 2: **DOB:** YYYY-MM-DD (markdown)
+  if (!dobMatch) {
+    dobMatch = text.match(/\*\*DOB:?\*\*\s*(\d{4}-\d{2}-\d{2})/i);
+  }
+  
+  // Format 3: Date of Birth: YYYY-MM-DD
+  if (!dobMatch) {
+    dobMatch = text.match(/Date\s+of\s+Birth:\s*(\d{4}-\d{2}-\d{2})/i);
+  }
+  
+  // Format 4: Born: YYYY-MM-DD
+  if (!dobMatch) {
+    dobMatch = text.match(/Born:\s*(\d{4}-\d{2}-\d{2})/i);
+  }
+  
+  // Format 5: Just a date in YYYY-MM-DD format
+  if (!dobMatch) {
+    dobMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
+  }
+  
   if (dobMatch) {
     result.dob = dobMatch[1];
     const [year, month, day] = dobMatch[1].split('-');
@@ -107,30 +255,80 @@ const parseDobResponse = (text: string): DobInferenceResult => {
       age--;
     }
     result.age = age;
+    console.log(`✅ Parsed DOB: ${result.dob}, Age: ${result.age}`);
+  } else {
+    // Try to extract just birth year
+    console.log("🔍 No full DOB found, looking for birth year...");
+    
+    // Pattern: birth year as 1998, birth year is 1998, born in 1998
+    const yearMatch = text.match(/birth\s+year\s+(?:as|is|of|:)?\s*(\d{4})/i) ||
+                      text.match(/born\s+in\s+(\d{4})/i) ||
+                      text.match(/(\d{4})\s+birth\s+year/i) ||
+                      text.match(/year\s+of\s+birth[:\s]+(\d{4})/i);
+    
+    if (yearMatch) {
+      const year = yearMatch[1];
+      // Use June 15 as default day/month (middle of year)
+      result.dob = `${year}-06-15`;
+      result.dobDisplay = `06/15/${year}`;
+      result.age = 2026 - parseInt(year, 10);
+      console.log(`✅ Extracted birth year: ${year}, Age: ${result.age}`);
+    } else {
+      console.log("❌ No DOB or birth year pattern found in response");
+    }
   }
   
-  // Extract confidence
-  const confidenceMatch = text.match(/CONFIDENCE:\s*(\d+)/i);
+  // Extract confidence - multiple formats
+  let confidenceMatch = text.match(/CONFIDENCE:\s*(\d+)/i);
+  if (!confidenceMatch) {
+    confidenceMatch = text.match(/\*\*CONFIDENCE:?\*\*\s*(\d+)/i);
+  }
+  if (!confidenceMatch) {
+    confidenceMatch = text.match(/confidence[:\s]+(\d+)/i);
+  }
+  
   if (confidenceMatch) {
     result.confidence = Math.min(100, parseInt(confidenceMatch[1], 10));
+    console.log(`✅ Parsed confidence: ${result.confidence}%`);
   }
   
-  // Extract sources
-  const sourcesMatch = text.match(/SOURCES:\s*(.+)/i);
+  // Extract sources - multiple formats
+  let sourcesMatch = text.match(/SOURCES:\s*(.+?)(?=\n|$)/i);
+  if (!sourcesMatch) {
+    sourcesMatch = text.match(/\*\*SOURCES:?\*\*\s*(.+?)(?=\n|$)/i);
+  }
   if (sourcesMatch) {
-    result.sources = sourcesMatch[1].split(',').map(s => s.trim()).filter(s => s);
+    result.sources = sourcesMatch[1].split(',').map(s => s.trim()).filter(s => s && s.length > 2);
   }
   
-  // Extract reasoning
-  const reasoningMatch = text.match(/REASONING:\s*(.+?)(?=\n[A-Z]+:|$)/is);
+  // Extract reasoning - multiple formats
+  let reasoningMatch = text.match(/REASONING:\s*(.+?)(?=\n[A-Z]+:|$)/is);
+  if (!reasoningMatch) {
+    reasoningMatch = text.match(/\*\*REASONING:?\*\*\s*(.+?)(?=\n\*\*|$)/is);
+  }
   if (reasoningMatch) {
     result.reasoning = reasoningMatch[1].trim();
+  }
+  
+  // If we found a DOB but no confidence, set a default based on context
+  if (result.dob && result.confidence === 0) {
+    // Check if response mentions search results
+    if (text.toLowerCase().includes('linkedin') || text.toLowerCase().includes('profile')) {
+      result.confidence = 70;
+    } else if (text.toLowerCase().includes('graduation') || text.toLowerCase().includes('education')) {
+      result.confidence = 65;
+    } else if (text.toLowerCase().includes('heuristic') || text.toLowerCase().includes('estimate')) {
+      result.confidence = 40;
+    } else {
+      result.confidence = 50;
+    }
+    console.log(`📊 Auto-set confidence to ${result.confidence}% based on context`);
   }
   
   return result;
 };
 
-// Infer DOB using Gemini + Google Search (Enhanced Prompt v2)
+// Infer DOB using Vertex AI + Google Search (Enhanced Prompt v2)
 const inferDob = async (params: DobInferenceRequest): Promise<DobInferenceResult> => {
   const { name, email, address, residenceCountry, phone } = params;
   
@@ -234,7 +432,7 @@ Now search for "${name}" with email "${email || 'not provided'}" in "${location}
 `;
 
   try {
-    const response = await callGeminiAPI(prompt);
+    const response = await callVertexAI(prompt);
     
     let text = "";
     if (response.candidates && response.candidates[0]?.content?.parts) {
