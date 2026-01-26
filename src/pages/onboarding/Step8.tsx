@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
+
+// Edge Function URL for GPS geocoding (real-time location detection)
+const LOCATION_GEOCODE_API = `${config.SUPABASE_URL}/functions/v1/hushh-location-geocode`;
 
 // Back arrow icon
 const BackIcon = () => (
@@ -75,12 +78,90 @@ export default function OnboardingStep8() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+1');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
   const isFooterVisible = useFooterVisibility();
+  const locationAbortController = useRef<AbortController | null>(null);
 
   useEffect(() => {
     // Scroll to top on component mount
     window.scrollTo(0, 0);
   }, []);
+
+  // Real-time GPS detection function
+  const detectLocationRealTime = async (uid: string) => {
+    if (!navigator.geolocation) {
+      console.log('[Step8] Geolocation not available');
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    setLocationMessage('Detecting location...');
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000, // 1 minute cache - fresher than Step 6
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      console.log(`[Step8] Real-time GPS: ${latitude}, ${longitude}`);
+
+      locationAbortController.current = new AbortController();
+
+      const response = await fetch(LOCATION_GEOCODE_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': config.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${config.SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ latitude, longitude }),
+        signal: locationAbortController.current.signal,
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data?.phoneDialCode) {
+        const dialCode = result.data.phoneDialCode;
+        const dialCodeExists = countryCodes.some(c => c.code === dialCode);
+        
+        if (dialCodeExists) {
+          setCountryCode(dialCode);
+          setLocationMessage(`📍 ${result.data.city || result.data.country}`);
+          console.log('[Step8] Real-time GPS dial code:', dialCode);
+
+          // Update cache for other steps
+          if (config.supabaseClient) {
+            await config.supabaseClient
+              .from('onboarding_data')
+              .update({
+                gps_detected_phone_dial_code: dialCode,
+                gps_location_data: result.data,
+                gps_detected_country: result.data.country,
+                gps_detected_state: result.data.state,
+                gps_detected_city: result.data.city,
+                gps_detected_postal_code: result.data.postalCode,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('user_id', uid);
+          }
+        }
+        
+        setTimeout(() => setLocationMessage(null), 2000);
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.log('[Step8] GPS detection failed:', error);
+      }
+      setLocationMessage(null);
+    } finally {
+      setIsDetectingLocation(false);
+    }
+  };
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -93,42 +174,35 @@ export default function OnboardingStep8() {
       }
       setUserId(user.id);
 
-      // Load existing data if any, including GPS-detected dial code
+      // Load existing data
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
         .select('phone_number, phone_country_code, gps_detected_phone_dial_code')
         .eq('user_id', user.id)
         .single();
 
-      // Load phone number if exists
+      // If user has already saved a phone number, use their saved data
       if (onboardingData?.phone_number) {
         setPhoneNumber(onboardingData.phone_number);
-        // Only use saved country code if user has already entered a phone number
         if (onboardingData?.phone_country_code) {
           setCountryCode(onboardingData.phone_country_code);
           console.log('[Step8] Using saved phone country code:', onboardingData.phone_country_code);
-          return; // User has saved data, use it
+          return;
         }
       }
       
-      // For new users or users who haven't entered a phone yet:
-      // Use GPS-detected dial code as the intelligent default
-      if (onboardingData?.gps_detected_phone_dial_code) {
-        const gpsDialCode = onboardingData.gps_detected_phone_dial_code;
-        // Verify the dial code exists in our list
-        const dialCodeExists = countryCodes.some(c => c.code === gpsDialCode);
-        if (dialCodeExists) {
-          setCountryCode(gpsDialCode);
-          console.log('[Step8] Using GPS-detected dial code:', gpsDialCode);
-        } else {
-          console.log('[Step8] GPS dial code not in list:', gpsDialCode);
-        }
-      } else {
-        console.log('[Step8] No GPS dial code found, using default +1');
-      }
+      // For new users: Always detect GPS in real-time (don't rely on stale cache)
+      console.log('[Step8] Detecting location in real-time...');
+      detectLocationRealTime(user.id);
     };
 
     getCurrentUser();
+    
+    return () => {
+      if (locationAbortController.current) {
+        locationAbortController.current.abort();
+      }
+    };
   }, [navigate]);
 
   const handleContinue = async () => {

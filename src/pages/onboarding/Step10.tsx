@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
+
+// Edge Function URL for GPS geocoding (real-time location detection)
+const LOCATION_GEOCODE_API = `${config.SUPABASE_URL}/functions/v1/hushh-location-geocode`;
 
 // Types for location data from our Edge Function
 interface Country {
@@ -152,11 +155,158 @@ function OnboardingStep10() {
   const [isInferringAddress, setIsInferringAddress] = useState(false);
   const [inferenceMessage, setInferenceMessage] = useState<string | null>(null);
   const inferenceAbortController = useRef<AbortController | null>(null);
+  const gpsAbortController = useRef<AbortController | null>(null);
 
   // Lightweight Address Inference API URL
   const ADDRESS_INFERENCE_API = 'https://ibsisfnjxeowvdtvgzff.supabase.co/functions/v1/hushh-address-inference';
 
-  // Load existing data with GPS pre-population and AI fallback
+  // Real-time GPS detection function for Step 10
+  const detectAndApplyGPS = useCallback(async (uid: string) => {
+    if (!navigator.geolocation) {
+      console.log('[Step10] Geolocation not available');
+      return null;
+    }
+
+    setIsInferringAddress(true);
+    setInferenceMessage('📍 Detecting your location...');
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000, // 1 minute cache - fresh data
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      console.log(`[Step10] Real-time GPS: ${latitude}, ${longitude}`);
+
+      gpsAbortController.current = new AbortController();
+
+      const response = await fetch(LOCATION_GEOCODE_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': config.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${config.SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ latitude, longitude }),
+        signal: gpsAbortController.current.signal,
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const gpsData = result.data;
+        console.log('[Step10] Real-time GPS data:', gpsData);
+
+        // Update cache for consistency
+        if (config.supabaseClient) {
+          await config.supabaseClient
+            .from('onboarding_data')
+            .update({
+              gps_location_data: gpsData,
+              gps_detected_country: gpsData.country,
+              gps_detected_state: gpsData.state,
+              gps_detected_city: gpsData.city,
+              gps_detected_postal_code: gpsData.postalCode,
+              gps_detected_phone_dial_code: gpsData.phoneDialCode,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', uid);
+        }
+
+        setInferenceMessage(`📍 ${gpsData.city || gpsData.country}`);
+        setTimeout(() => setInferenceMessage(null), 2000);
+
+        return gpsData;
+      }
+      return null;
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.log('[Step10] GPS detection failed:', error);
+      }
+      setInferenceMessage(null);
+      return null;
+    } finally {
+      setIsInferringAddress(false);
+    }
+  }, []);
+
+  // Apply GPS data to form fields
+  const applyGpsDataToForm = useCallback((gpsData: {
+    country?: string;
+    countryCode?: string;
+    state?: string;
+    stateCode?: string;
+    city?: string;
+    postalCode?: string;
+    formattedAddress?: string;
+  }) => {
+    // Set country (triggers state dropdown loading)
+    if (gpsData.countryCode) {
+      setCountry(gpsData.countryCode);
+    }
+    
+    // Set postal code immediately
+    if (gpsData.postalCode) {
+      setZipCode(gpsData.postalCode);
+    }
+    
+    // Parse formattedAddress into address lines
+    if (gpsData.formattedAddress) {
+      const fullAddress = gpsData.formattedAddress;
+      const cityName = gpsData.city || '';
+      const stateName = gpsData.state || '';
+      const postalCode = gpsData.postalCode || '';
+      const countryName = gpsData.country || '';
+      
+      let streetPart = fullAddress;
+      
+      if (countryName && streetPart.endsWith(countryName)) {
+        streetPart = streetPart.slice(0, -countryName.length).replace(/,\s*$/, '');
+      }
+      if (postalCode) {
+        streetPart = streetPart.replace(new RegExp(`\\s*${postalCode}\\s*,?`), '');
+      }
+      if (stateName) {
+        streetPart = streetPart.replace(new RegExp(`,?\\s*${stateName}\\s*$`), '');
+      }
+      if (cityName) {
+        streetPart = streetPart.replace(new RegExp(`,?\\s*${cityName}\\s*$`), '');
+      }
+      
+      streetPart = streetPart.replace(/,\s*$/, '').trim();
+      const parts = streetPart.split(',').map(p => p.trim()).filter(p => p);
+      
+      if (parts.length >= 1) {
+        setAddressLine1(parts[0]);
+        console.log('[Step10] GPS Address Line 1:', parts[0]);
+      }
+      if (parts.length >= 2) {
+        setAddressLine2(parts.slice(1).join(', '));
+        console.log('[Step10] GPS Address Line 2:', parts.slice(1).join(', '));
+      }
+    }
+    
+    // Delay setting state/city to allow dropdowns to load
+    setTimeout(() => {
+      if (gpsData.stateCode) {
+        setState(gpsData.stateCode);
+      } else if (gpsData.state) {
+        setState(gpsData.state);
+      }
+      
+      setTimeout(() => {
+        if (gpsData.city) {
+          setCity(gpsData.city);
+        }
+      }, 300);
+    }, 500);
+  }, []);
+
+  // Load existing data with REAL-TIME GPS detection
   useEffect(() => {
     const loadData = async () => {
       if (!config.supabaseClient) return;
@@ -165,10 +315,9 @@ function OnboardingStep10() {
       if (!user) return;
 
       // 1. First, check existing onboarding data (user-entered takes priority)
-      // Also fetch GPS-detected location data from Step 6
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('address_line_1, address_line_2, address_country, state, city, zip_code, legal_first_name, legal_last_name, gps_detected_country, gps_detected_state, gps_detected_city, gps_detected_postal_code, gps_location_data, residence_country')
+        .select('address_line_1, address_line_2, address_country, state, city, zip_code, legal_first_name, legal_last_name, residence_country')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -183,101 +332,16 @@ function OnboardingStep10() {
         return; // User has existing data, don't override
       }
 
-      // 2. Check for GPS-detected location data from Step 6 (fastest, most reliable)
-      if (onboardingData?.gps_location_data) {
-        const gpsData = onboardingData.gps_location_data as {
-          country?: string;
-          countryCode?: string;
-          state?: string;
-          stateCode?: string;
-          city?: string;
-          postalCode?: string;
-          formattedAddress?: string;
-        };
-        console.log('[Step10] Using GPS-detected location data:', gpsData);
-        
-        // Set country (triggers state dropdown loading)
-        if (gpsData.countryCode) {
-          setCountry(gpsData.countryCode);
-        }
-        
-        // Set postal code immediately
-        if (gpsData.postalCode) {
-          setZipCode(gpsData.postalCode);
-        }
-        
-        // Parse formattedAddress into address lines
-        // Example: "E-707, near VTP Belair, Mahalunge, Pune, Maharashtra 411045, India"
-        // We extract parts before city/state/zip for address lines
-        if (gpsData.formattedAddress) {
-          const fullAddress = gpsData.formattedAddress;
-          const city = gpsData.city || '';
-          const state = gpsData.state || '';
-          const postalCode = gpsData.postalCode || '';
-          const country = gpsData.country || '';
-          
-          // Remove city, state, zip, country from the end to get street address
-          let streetPart = fullAddress;
-          
-          // Remove country suffix
-          if (country && streetPart.endsWith(country)) {
-            streetPart = streetPart.slice(0, -country.length).replace(/,\s*$/, '');
-          }
-          
-          // Remove zip code
-          if (postalCode) {
-            streetPart = streetPart.replace(new RegExp(`\\s*${postalCode}\\s*,?`), '');
-          }
-          
-          // Remove state
-          if (state) {
-            streetPart = streetPart.replace(new RegExp(`,?\\s*${state}\\s*$`), '');
-          }
-          
-          // Remove city
-          if (city) {
-            streetPart = streetPart.replace(new RegExp(`,?\\s*${city}\\s*$`), '');
-          }
-          
-          // Clean up extra commas
-          streetPart = streetPart.replace(/,\s*$/, '').trim();
-          
-          // Split into address line 1 and 2
-          const parts = streetPart.split(',').map(p => p.trim()).filter(p => p);
-          
-          if (parts.length >= 1) {
-            setAddressLine1(parts[0]);
-            console.log('[Step10] GPS Address Line 1:', parts[0]);
-          }
-          if (parts.length >= 2) {
-            // Join remaining parts as address line 2
-            setAddressLine2(parts.slice(1).join(', '));
-            console.log('[Step10] GPS Address Line 2:', parts.slice(1).join(', '));
-          }
-        }
-        
-        // Delay setting state/city to allow dropdowns to load
-        setTimeout(() => {
-          // Use stateCode for select dropdown matching
-          if (gpsData.stateCode) {
-            setState(gpsData.stateCode);
-          } else if (gpsData.state) {
-            setState(gpsData.state);
-          }
-          
-          setTimeout(() => {
-            if (gpsData.city) {
-              setCity(gpsData.city);
-            }
-          }, 300);
-        }, 500);
-        
-        setInferenceMessage('Address pre-filled from GPS');
-        setTimeout(() => setInferenceMessage(null), 2000);
+      // 2. For new users: Always detect GPS in REAL-TIME (not cached data)
+      console.log('[Step10] Detecting location in real-time...');
+      const gpsData = await detectAndApplyGPS(user.id);
+      
+      if (gpsData) {
+        applyGpsDataToForm(gpsData);
         return; // GPS data found, don't need AI inference
       }
 
-      // 3. Check for cached enriched profile data (from previous inference)
+      // 3. GPS failed - Check for cached enriched profile data (from previous inference)
       const { data: enrichedProfile } = await config.supabaseClient
         .from('user_enriched_profiles')
         .select('address')
