@@ -23,24 +23,35 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create a Supabase client with the user's token
+    // Extract JWT from Bearer token
+    const jwt = authHeader.replace('Bearer ', '')
+    if (!jwt || jwt === authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authorization header format. Expected: Bearer <token>' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log('[DeleteAccount] JWT extracted, length:', jwt.length)
+
+    // Create Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-    // User client to verify the user
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    })
-
-    // Admin client for deletion operations
+    // Admin client for all operations (including user verification)
     const adminClient = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get the current user
-    const { data: { user }, error: userError } = await userClient.auth.getUser()
+    // Use admin client to get user from the JWT token directly
+    // This is more reliable than creating a user client with the token
+    const { data: { user }, error: userError } = await adminClient.auth.getUser(jwt)
     
     if (userError || !user) {
-      console.error('User validation failed:', userError?.message, userError?.status)
+      console.error('[DeleteAccount] User validation failed:', userError?.message, userError?.status)
+      console.error('[DeleteAccount] Full error:', JSON.stringify(userError))
       
       // Provide more detailed error message
       let errorMessage = 'Invalid or expired token'
@@ -63,6 +74,8 @@ Deno.serve(async (req) => {
         }
       )
     }
+
+    console.log('[DeleteAccount] User verified successfully:', user.id, user.email)
 
     const userId = user.id
     console.log(`Deleting account for user: ${userId}`)
