@@ -151,11 +151,67 @@ function OnboardingStep10() {
     fetchCities();
   }, [country, state]);
 
+  // ============================================
+  // FIX: Watch for dropdown data loading and apply pending GPS values
+  // This solves the race condition where GPS data arrives before dropdowns load
+  // ============================================
+
+  // Apply pending country when countries list loads
+  useEffect(() => {
+    if (countries.length > 0 && pendingGpsCountry.current) {
+      const countryCode = pendingGpsCountry.current;
+      const countryExists = countries.some(c => c.isoCode === countryCode);
+      if (countryExists) {
+        console.log('[Step10] Applying pending GPS country:', countryCode);
+        setCountry(countryCode);
+      }
+      pendingGpsCountry.current = null;
+    }
+  }, [countries]);
+
+  // Apply pending state when states list loads
+  useEffect(() => {
+    if (states.length > 0 && pendingGpsState.current) {
+      const stateCode = pendingGpsState.current;
+      const stateExists = states.some(s => s.isoCode === stateCode || s.name === stateCode);
+      if (stateExists) {
+        // Use isoCode if it matches, otherwise use name
+        const matchingState = states.find(s => s.isoCode === stateCode || s.name === stateCode);
+        if (matchingState) {
+          console.log('[Step10] Applying pending GPS state:', matchingState.isoCode);
+          setState(matchingState.isoCode);
+        }
+      }
+      pendingGpsState.current = null;
+    }
+  }, [states]);
+
+  // Apply pending city when cities list loads
+  useEffect(() => {
+    if (cities.length > 0 && pendingGpsCity.current) {
+      const cityName = pendingGpsCity.current;
+      const cityExists = cities.some(c => c.name === cityName);
+      if (cityExists) {
+        console.log('[Step10] Applying pending GPS city:', cityName);
+        setCity(cityName);
+      }
+      pendingGpsCity.current = null;
+    }
+  }, [cities]);
+
   // AI Address Inference state
   const [isInferringAddress, setIsInferringAddress] = useState(false);
   const [inferenceMessage, setInferenceMessage] = useState<string | null>(null);
   const inferenceAbortController = useRef<AbortController | null>(null);
   const gpsAbortController = useRef<AbortController | null>(null);
+
+  // Refs to store pending GPS values (to apply after dropdowns load)
+  const pendingGpsCountry = useRef<string | null>(null);
+  const pendingGpsState = useRef<string | null>(null);
+  const pendingGpsCity = useRef<string | null>(null);
+  const pendingGpsZip = useRef<string | null>(null);
+  const pendingGpsAddress1 = useRef<string | null>(null);
+  const pendingGpsAddress2 = useRef<string | null>(null);
 
   // Lightweight Address Inference API URL
   const ADDRESS_INFERENCE_API = 'https://ibsisfnjxeowvdtvgzff.supabase.co/functions/v1/hushh-address-inference';
@@ -234,7 +290,7 @@ function OnboardingStep10() {
     }
   }, []);
 
-  // Apply GPS data to form fields
+  // Apply GPS data to form fields (FIXED: Uses pending refs to handle race condition)
   const applyGpsDataToForm = useCallback((gpsData: {
     country?: string;
     countryCode?: string;
@@ -244,17 +300,14 @@ function OnboardingStep10() {
     postalCode?: string;
     formattedAddress?: string;
   }) => {
-    // Set country (triggers state dropdown loading)
-    if (gpsData.countryCode) {
-      setCountry(gpsData.countryCode);
-    }
+    console.log('[Step10] Applying GPS data to form:', gpsData);
     
-    // Set postal code immediately
+    // Set postal code immediately (no dropdown dependency)
     if (gpsData.postalCode) {
       setZipCode(gpsData.postalCode);
     }
     
-    // Parse formattedAddress into address lines
+    // Parse formattedAddress into address lines (no dropdown dependency)
     if (gpsData.formattedAddress) {
       const fullAddress = gpsData.formattedAddress;
       const cityName = gpsData.city || '';
@@ -290,20 +343,31 @@ function OnboardingStep10() {
       }
     }
     
-    // Delay setting state/city to allow dropdowns to load
-    setTimeout(() => {
-      if (gpsData.stateCode) {
-        setState(gpsData.stateCode);
-      } else if (gpsData.state) {
-        setState(gpsData.state);
-      }
-      
-      setTimeout(() => {
-        if (gpsData.city) {
-          setCity(gpsData.city);
-        }
-      }, 300);
-    }, 500);
+    // FIX: Store GPS values in refs for later application when dropdowns load
+    // This solves the race condition where dropdowns aren't ready yet
+    
+    // Country: Store in ref AND try to set directly (if countries already loaded)
+    if (gpsData.countryCode) {
+      pendingGpsCountry.current = gpsData.countryCode;
+      // Also try setting directly - if countries are already loaded, this will work
+      // If not, the useEffect watching countries will apply the pending value
+      setCountry(gpsData.countryCode);
+    }
+    
+    // State: Store in ref for later application when states load
+    if (gpsData.stateCode) {
+      pendingGpsState.current = gpsData.stateCode;
+      console.log('[Step10] Stored pending GPS state:', gpsData.stateCode);
+    } else if (gpsData.state) {
+      pendingGpsState.current = gpsData.state;
+      console.log('[Step10] Stored pending GPS state (name):', gpsData.state);
+    }
+    
+    // City: Store in ref for later application when cities load
+    if (gpsData.city) {
+      pendingGpsCity.current = gpsData.city;
+      console.log('[Step10] Stored pending GPS city:', gpsData.city);
+    }
   }, []);
 
   // Load existing data with REAL-TIME GPS detection
