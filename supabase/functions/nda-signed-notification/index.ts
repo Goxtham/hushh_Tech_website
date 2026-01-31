@@ -285,125 +285,209 @@ serve(async (req) => {
 
     const subject = `[Hushh NDA] Agreement Signed by ${signerName}`;
     
-    // Create professional HTML email
+    // Create professional HTML email - clean black/white design with proper spacing
     const html = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>NDA Agreement Signed</title>
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-          
-          <!-- Header -->
-          <div style="background-color: #000000; padding: 32px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">
-              NDA Agreement Signed
-            </h1>
-            <p style="color: #888888; margin: 8px 0 0 0; font-size: 14px;">
-              Hushh Technologies Inc.
-            </p>
-          </div>
-
-          <!-- Content -->
-          <div style="padding: 32px;">
-            <p style="color: #0B1120; font-size: 16px; margin: 0 0 24px 0;">
-              A new user has signed the Non-Disclosure Agreement on the Hushh platform.
-            </p>
-
-            <!-- Signer Details Card -->
-            <div style="background-color: #F8FAFC; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #000000;">
-              <h2 style="color: #0B1120; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">
-                Signer Information
-              </h2>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #ffffff; -webkit-font-smoothing: antialiased;">
+        
+        <!-- Email Container -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff;">
+          <tr>
+            <td align="center" style="padding: 40px 20px;">
               
-              <table style="width: 100%; border-collapse: collapse;">
+              <!-- Main Content Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; border: 1px solid #000000;">
+                
+                <!-- Header -->
                 <tr>
-                  <td style="padding: 8px 0; color: #6B7280; font-size: 14px; width: 120px;">Name:</td>
-                  <td style="padding: 8px 0; color: #0B1120; font-size: 14px; font-weight: 600;">${signerName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #6B7280; font-size: 14px;">Email:</td>
-                  <td style="padding: 8px 0; color: #0B1120; font-size: 14px;">
-                    <a href="mailto:${signerEmail}" style="color: #0A84FF; text-decoration: none;">${signerEmail}</a>
+                  <td style="background-color: #000000; padding: 40px 32px; text-align: center;">
+                    <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em;">
+                      NDA Agreement Signed
+                    </h1>
+                    <p style="color: #999999; margin: 12px 0 0 0; font-size: 13px; font-weight: 400;">
+                      Hushh Technologies Inc.
+                    </p>
                   </td>
                 </tr>
+
+                <!-- Body Content -->
                 <tr>
-                  <td style="padding: 8px 0; color: #6B7280; font-size: 14px;">Signed At:</td>
-                  <td style="padding: 8px 0; color: #0B1120; font-size: 14px;">${signedDate}</td>
+                  <td style="padding: 40px 32px;">
+                    
+                    <!-- Intro Text -->
+                    <p style="color: #000000; font-size: 15px; line-height: 1.6; margin: 0 0 32px 0;">
+                      A new user has signed the Non-Disclosure Agreement on the Hushh platform.
+                    </p>
+
+                    <!-- Signer Details -->
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border: 1px solid #000000; margin-bottom: 32px;">
+                      
+                      <!-- Table Header -->
+                      <tr>
+                        <td colspan="2" style="background-color: #000000; padding: 16px 20px;">
+                          <span style="color: #ffffff; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Signer Information
+                          </span>
+                        </td>
+                      </tr>
+                      
+                      <!-- Name -->
+                      <tr>
+                        <td style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; width: 140px; vertical-align: top;">
+                          <span style="color: #666666; font-size: 13px;">Name</span>
+                        </td>
+                        <td style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; vertical-align: top;">
+                          <span style="color: #000000; font-size: 14px; font-weight: 600;">${signerName}</span>
+                        </td>
+                      </tr>
+                      
+                      <!-- Email -->
+                      <tr>
+                        <td style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; width: 140px; vertical-align: top;">
+                          <span style="color: #666666; font-size: 13px;">Email</span>
+                        </td>
+                        <td style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; vertical-align: top;">
+                          <a href="mailto:${signerEmail}" style="color: #000000; font-size: 14px; text-decoration: underline;">${signerEmail}</a>
+                        </td>
+                      </tr>
+                      
+                      <!-- Signed At -->
+                      <tr>
+                        <td style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; width: 140px; vertical-align: top;">
+                          <span style="color: #666666; font-size: 13px;">Signed At</span>
+                        </td>
+                        <td style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; vertical-align: top;">
+                          <span style="color: #000000; font-size: 14px;">${signedDate}</span>
+                        </td>
+                      </tr>
+                      
+                      <!-- NDA Version -->
+                      <tr>
+                        <td style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; width: 140px; vertical-align: top;">
+                          <span style="color: #666666; font-size: 13px;">NDA Version</span>
+                        </td>
+                        <td style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; vertical-align: top;">
+                          <span style="color: #000000; font-size: 14px;">${ndaVersion}</span>
+                        </td>
+                      </tr>
+                      
+                      <!-- IP Address -->
+                      <tr>
+                        <td style="padding: 16px 20px; ${userId ? 'border-bottom: 1px solid #e5e5e5;' : ''} width: 140px; vertical-align: top;">
+                          <span style="color: #666666; font-size: 13px;">IP Address</span>
+                        </td>
+                        <td style="padding: 16px 20px; ${userId ? 'border-bottom: 1px solid #e5e5e5;' : ''} vertical-align: top;">
+                          <span style="color: #000000; font-size: 14px; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">${signerIp}</span>
+                        </td>
+                      </tr>
+                      
+                      ${userId ? `
+                      <!-- User ID -->
+                      <tr>
+                        <td style="padding: 16px 20px; width: 140px; vertical-align: top;">
+                          <span style="color: #666666; font-size: 13px;">User ID</span>
+                        </td>
+                        <td style="padding: 16px 20px; vertical-align: top;">
+                          <span style="color: #000000; font-size: 12px; font-family: 'SF Mono', Monaco, 'Courier New', monospace; word-break: break-all;">${userId}</span>
+                        </td>
+                      </tr>
+                      ` : ''}
+                    </table>
+
+                    ${pdfUrl ? `
+                    <!-- PDF Link -->
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border: 1px solid #000000; margin-bottom: 32px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="padding-right: 16px; vertical-align: top;">
+                                <span style="font-size: 24px;">📄</span>
+                              </td>
+                              <td style="vertical-align: top;">
+                                <p style="margin: 0 0 4px 0; color: #000000; font-size: 14px; font-weight: 600;">Signed NDA Document</p>
+                                <a href="${pdfUrl}" style="color: #000000; font-size: 13px; text-decoration: underline;">
+                                  View/Download PDF →
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    ` : ''}
+
+                    ${pdfBase64 ? `
+                    <!-- Attachment Notice -->
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border: 1px solid #000000; margin-bottom: 32px;">
+                      <tr>
+                        <td style="padding: 16px 20px;">
+                          <span style="color: #000000; font-size: 14px;">📎 The signed NDA PDF is attached to this email.</span>
+                        </td>
+                      </tr>
+                    </table>
+                    ` : ''}
+
+                    <!-- Action Buttons -->
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td align="center" style="padding-top: 8px;">
+                          <!-- Stacked buttons for mobile compatibility -->
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
+                            <tr>
+                              <td style="padding: 8px;">
+                                <a href="https://hushh.ai/nda-admin" 
+                                   style="display: inline-block; background-color: #000000; color: #ffffff; 
+                                          padding: 14px 28px; text-decoration: none; font-weight: 600; 
+                                          font-size: 13px; min-width: 180px; text-align: center;">
+                                  View All NDA Agreements
+                                </a>
+                              </td>
+                            </tr>
+                            ${userId ? `
+                            <tr>
+                              <td style="padding: 8px;">
+                                <a href="https://hushh.ai/nda-admin?highlight=${userId}" 
+                                   style="display: inline-block; background-color: #ffffff; color: #000000; 
+                                          padding: 12px 28px; text-decoration: none; font-weight: 600; 
+                                          font-size: 13px; border: 2px solid #000000; min-width: 180px; text-align: center;">
+                                  View This User's NDA
+                                </a>
+                              </td>
+                            </tr>
+                            ` : ''}
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+
+                  </td>
                 </tr>
+
+                <!-- Footer -->
                 <tr>
-                  <td style="padding: 8px 0; color: #6B7280; font-size: 14px;">NDA Version:</td>
-                  <td style="padding: 8px 0; color: #0B1120; font-size: 14px;">${ndaVersion}</td>
+                  <td style="border-top: 1px solid #000000; padding: 24px 32px; text-align: center;">
+                    <p style="color: #666666; font-size: 12px; margin: 0; line-height: 1.5;">
+                      This is an automated notification from Hushh Technologies Inc.
+                    </p>
+                    <p style="color: #666666; font-size: 12px; margin: 8px 0 0 0;">
+                      © ${new Date().getFullYear()} Hushh Technologies Inc. All rights reserved.
+                    </p>
+                  </td>
                 </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #6B7280; font-size: 14px;">IP Address:</td>
-                  <td style="padding: 8px 0; color: #0B1120; font-size: 14px;">${signerIp}</td>
-                </tr>
-                ${userId ? `
-                <tr>
-                  <td style="padding: 8px 0; color: #6B7280; font-size: 14px;">User ID:</td>
-                  <td style="padding: 8px 0; color: #0B1120; font-size: 14px; font-family: monospace;">${userId}</td>
-                </tr>
-                ` : ''}
+
               </table>
-            </div>
+              
+            </td>
+          </tr>
+        </table>
 
-            ${pdfUrl ? `
-            <!-- PDF Link -->
-            <div style="background-color: #EEF2FF; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 24px;">📄</span>
-                <div>
-                  <p style="margin: 0; color: #0B1120; font-size: 14px; font-weight: 600;">Signed NDA Document</p>
-                  <a href="${pdfUrl}" style="color: #0A84FF; font-size: 13px; text-decoration: none;">
-                    View/Download PDF →
-                  </a>
-                </div>
-              </div>
-            </div>
-            ` : ''}
-
-            ${pdfBase64 ? `
-            <!-- Attachment Notice -->
-            <div style="background-color: #ECFDF5; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-              <p style="margin: 0; color: #059669; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 16px;">📎</span>
-                The signed NDA PDF is attached to this email.
-              </p>
-            </div>
-            ` : ''}
-
-            <!-- Action Buttons -->
-            <div style="text-align: center; margin-top: 32px;">
-              <a href="https://hushh.ai/nda-admin" 
-                 style="display: inline-block; background-color: #0A0A0A; color: #ffffff; 
-                        padding: 14px 32px; text-decoration: none; border-radius: 8px; 
-                        font-weight: 600; font-size: 14px; margin-right: 12px;">
-                View All NDA Agreements
-              </a>
-              ${userId ? `
-              <a href="https://hushh.ai/nda-admin?highlight=${userId}" 
-                 style="display: inline-block; background-color: #ffffff; color: #0A0A0A; 
-                        padding: 14px 32px; text-decoration: none; border-radius: 8px; 
-                        font-weight: 600; font-size: 14px; border: 2px solid #0A0A0A;">
-                View This User's NDA
-              </a>
-              ` : ''}
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div style="background-color: #F8FAFC; padding: 24px; text-align: center; border-top: 1px solid #E5E7EB;">
-            <p style="color: #6B7280; font-size: 12px; margin: 0;">
-              This is an automated notification from Hushh Technologies Inc.
-            </p>
-            <p style="color: #6B7280; font-size: 12px; margin: 8px 0 0 0;">
-              © ${new Date().getFullYear()} Hushh Technologies Inc. All rights reserved.
-            </p>
-          </div>
-        </div>
       </body>
       </html>
     `;
