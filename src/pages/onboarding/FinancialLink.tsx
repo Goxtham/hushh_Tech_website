@@ -55,7 +55,7 @@ export default function OnboardingFinancialLink() {
           .from('user_financial_data')
           .select('status')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         // If already completed, skip to step 1
         if (financialData?.status === 'complete' || financialData?.status === 'partial') {
