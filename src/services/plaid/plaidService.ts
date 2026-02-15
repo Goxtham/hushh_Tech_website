@@ -254,3 +254,46 @@ export const getProductStatus = (product: ProductResult): ProductFetchStatus => 
   if (product.data?.status === 'pending') return 'pending';
   return 'idle';
 };
+
+// =====================================================
+// Sandbox Testing — Bypass Plaid Link UI
+// =====================================================
+
+export interface SandboxTestResult {
+  success: boolean;
+  item_id: string;
+  institution: { name: string; id: string };
+  products: {
+    balance: { available: boolean; accounts: number; error: string | null };
+    investments: { available: boolean; holdings: number; error: string | null };
+    assets: { available: boolean; token: string | null; error: string | null };
+  };
+  summary: {
+    products_available: number;
+    products_total: number;
+    status: string;
+    saved_to_db: boolean;
+  };
+}
+
+/**
+ * Create a sandbox test Item (bypasses Plaid Link UI).
+ * Uses /sandbox/public_token/create → exchange → fetch all → save.
+ * SANDBOX ONLY.
+ */
+export const createSandboxTestItem = async (
+  userId: string,
+  institutionId = 'ins_109508',
+): Promise<SandboxTestResult> => {
+  const token = await getUserAccessToken();
+  const res = await fetch(`${SUPABASE_URL}/sandbox-create-test-item`, {
+    method: 'POST',
+    headers: getHeaders(token),
+    body: JSON.stringify({ userId, institutionId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Sandbox test item creation failed');
+  }
+  return res.json() as Promise<SandboxTestResult>;
+};

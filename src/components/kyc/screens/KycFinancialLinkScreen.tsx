@@ -1,8 +1,8 @@
 /**
  * KycFinancialLinkScreen — Pre-KYC Financial Verification
  * 
- * Apple-inspired clean UI. White background, black text, gray icons.
- * Primary CTA: #2F80ED blue.
+ * Clean UI. White background, black text, gray icons.
+ * Primary CTA: Indigo-purple gradient matching KYC flow.
  * 
  * Links user's bank via Plaid and fetches 3 data points:
  * 1. Balance  2. Assets  3. Investments
@@ -35,8 +35,9 @@ import type { FinancialVerificationResult } from '../../../types/kyc';
 // =====================================================
 
 const COLORS = {
-  primary: '#2F80ED',
-  primaryHover: '#2872D4',
+  primary: '#6366F1',
+  primaryHover: '#5558E0',
+  primaryGradient: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
   bg: '#FFFFFF',
   textPrimary: '#000000',
   textSecondary: '#8E8E93',
@@ -399,17 +400,17 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
     }
   };
 
-  // Button bg color based on state
+  // Button bg color based on state — matches KYC flow gradient
   const buttonBg = useMemo(() => {
     if (plaid.step === 'done' && plaid.canProceed) return COLORS.success;
     if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) return COLORS.error;
-    return COLORS.primary;
+    return COLORS.primaryGradient;
   }, [plaid.step, plaid.canProceed]);
 
   const buttonHoverBg = useMemo(() => {
     if (plaid.step === 'done' && plaid.canProceed) return '#2DB84E';
     if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) return '#E5342B';
-    return COLORS.primaryHover;
+    return COLORS.primaryGradient;
   }, [plaid.step, plaid.canProceed]);
 
   return (
