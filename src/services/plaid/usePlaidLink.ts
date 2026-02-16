@@ -113,6 +113,99 @@ const isTokenValid = (expiration: string | null): boolean => {
 };
 
 // =====================================================
+// Database Restore — Most Stable
+// =====================================================
+
+/** Load completed financial data from Supabase database */
+const loadFromDatabase = async (userId: string): Promise<PlaidLinkState | null> => {
+  try {
+    const config = (await import('../../resources/config/config')).default;
+    const supabase = config.supabaseClient;
+    if (!supabase) {
+      console.warn('[Plaid] Database restore skipped: Supabase client not available');
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('user_financial_data')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[Plaid] Database restore query error (ignoring):', error.message);
+      return null;
+    }
+
+    if (!data) {
+      console.log('[Plaid] No financial data found in database');
+      return null;
+    }
+
+    // Reconstruct state from database
+    if (data.status === 'complete' || data.status === 'partial') {
+      console.log('[Plaid] 🔄 Restoring from database:', {
+        status: data.status,
+        institution: data.institution_name,
+        products: data.available_products,
+      });
+
+      const available = data.available_products || {};
+      const productsAvailable = [
+        available.balance,
+        available.assets,
+        available.investments,
+      ].filter(Boolean).length;
+
+      return {
+        step: 'done',
+        linkToken: null,
+        error: null,
+        institution: data.institution_name && data.institution_id
+          ? { name: data.institution_name, id: data.institution_id }
+          : null,
+        balanceStatus: available.balance ? 'success' : (data.fetch_errors?.balance ? 'error' : 'unavailable'),
+        assetsStatus: available.assets ? 'success' : (data.fetch_errors?.assets ? 'error' : 'unavailable'),
+        investmentsStatus: available.investments ? 'success' : (data.fetch_errors?.investments ? 'error' : 'unavailable'),
+        financialData: {
+          status: data.status,
+          balance: {
+            available: available.balance || false,
+            data: data.balances || null,
+            error: data.fetch_errors?.balance || null,
+            reason: data.fetch_errors?.balance ? 'error' as const : null,
+          },
+          assets: {
+            available: available.assets || false,
+            data: data.asset_report || null,
+            error: data.fetch_errors?.assets || null,
+            reason: data.fetch_errors?.assets ? 'error' as const : null,
+          },
+          investments: {
+            available: available.investments || false,
+            data: data.investments || null,
+            error: data.fetch_errors?.investments || null,
+            reason: data.fetch_errors?.investments ? 'error' as const : null,
+          },
+          summary: {
+            products_available: productsAvailable,
+            products_total: 3,
+            can_proceed: productsAvailable >= 1,
+          },
+        },
+        canProceed: productsAvailable >= 1,
+        productsAvailable,
+      };
+    }
+
+    return null;
+  } catch (err) {
+    console.warn('[Plaid] Database restore failed:', err);
+    return null;
+  }
+};
+
+// =====================================================
 // Hook
 // =====================================================
 
@@ -158,6 +251,8 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
   };
 
   const [state, setState] = useState<PlaidLinkState>(getInitialState);
+  const [dbRestoreComplete, setDbRestoreComplete] = useState(false);
+  const dbRestoreAttempted = useRef(false);
 
   const accessTokenRef = useRef<string | null>(null);
   const assetPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -211,9 +306,48 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
     }
   }, [userId, userEmail, getOAuthState, getRedirectUri]);
 
+  // Database restore — try once on mount before anything else
+  useEffect(() => {
+    if (!userId || dbRestoreAttempted.current) return;
+    dbRestoreAttempted.current = true;
+
+    // Only try DB restore if sessionStorage didn't have completed state
+    if (state.step === 'done' && state.financialData) {
+      console.log('[Plaid] ✅ SessionStorage restore successful, skipping DB check');
+      setDbRestoreComplete(true);
+      return;
+    }
+
+    // Try to restore from database with timeout
+    const timeoutId = setTimeout(() => {
+      console.warn('[Plaid] Database restore timeout after 5s, proceeding anyway');
+      setDbRestoreComplete(true);
+    }, 5000);
+
+    (async () => {
+      try {
+        const dbState = await loadFromDatabase(userId);
+        if (dbState) {
+          setState(dbState);
+          console.log('[Plaid] ✅ Restored from database');
+        }
+      } catch (err) {
+        console.error('[Plaid] Database restore error:', err);
+      } finally {
+        clearTimeout(timeoutId);
+        setDbRestoreComplete(true);
+      }
+    })();
+  }, [userId, state.step, state.financialData]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Auto-init — only if we don't already have a valid state
+  // IMPORTANT: Wait for DB restore to complete first
   useEffect(() => {
     if (!userId || initializedRef.current) return;
+
+    // Wait for DB restore to complete before initializing
+    if (!dbRestoreComplete) return;
+
     initializedRef.current = true;
 
     const oauthStateId = getOAuthState();
@@ -238,7 +372,7 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
 
     // No cached state or expired → create fresh token
     initToken();
-  }, [userId, initToken, getOAuthState]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, initToken, getOAuthState, state.step, state.financialData, dbRestoreComplete]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Step 2: Handle Plaid Link success
   const handleSuccess: PlaidLinkOnSuccess = useCallback(async (publicToken, metadata) => {
