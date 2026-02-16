@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
-import type { AccountStructure } from '../../types/onboarding';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
 // Back arrow icon
 const BackIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 12H5M12 19l-7-7 7-7" />
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 18l-6-6 6-6" />
   </svg>
 );
 
 export default function OnboardingStep7() {
   const navigate = useNavigate();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [selectedStructure, setSelectedStructure] = useState<AccountStructure | null>(null);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isFooterVisible = useFooterVisibility();
 
   useEffect(() => {
@@ -24,56 +24,94 @@ export default function OnboardingStep7() {
   }, []);
 
   useEffect(() => {
-    const getCurrentUser = async () => {
+    const loadData = async () => {
       if (!config.supabaseClient) return;
-      
+
       const { data: { user } } = await config.supabaseClient.auth.getUser();
       if (!user) {
         navigate('/login');
         return;
       }
-      setUserId(user.id);
 
-      // Load existing data if any
-      const { data: onboardingData } = await config.supabaseClient
+      // Extract name from OAuth provider metadata (Google, Apple, etc.)
+      const userMeta = user.user_metadata || {};
+      
+      // Try different name field patterns from various OAuth providers
+      // Google provides: given_name, family_name, full_name, name
+      // Apple provides: name (first_name, last_name), full_name
+      const oauthFirstName = userMeta.given_name || 
+                             userMeta.first_name || 
+                             (userMeta.full_name?.split(' ')[0]) || 
+                             (userMeta.name?.split(' ')[0]) || '';
+      const oauthLastName = userMeta.family_name || 
+                            userMeta.last_name || 
+                            (userMeta.full_name?.split(' ').slice(1).join(' ')) || 
+                            (userMeta.name?.split(' ').slice(1).join(' ')) || '';
+
+      // Check if user already has saved data in onboarding_data
+      const { data } = await config.supabaseClient
         .from('onboarding_data')
-        .select('account_structure')
+        .select('legal_first_name, legal_last_name')
         .eq('user_id', user.id)
         .single();
 
-      if (onboardingData?.account_structure) {
-        setSelectedStructure(onboardingData.account_structure as AccountStructure);
-      }
+      // Priority: Database data > OAuth provider data
+      // This allows users to keep their edits if they go back and forth
+      setFirstName(data?.legal_first_name || oauthFirstName);
+      setLastName(data?.legal_last_name || oauthLastName);
     };
 
-    getCurrentUser();
+    loadData();
   }, [navigate]);
 
   const handleContinue = async () => {
-    if (!selectedStructure || !userId || !config.supabaseClient) return;
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Please enter both first and last name');
+      return;
+    }
 
     setIsLoading(true);
-    try {
-      await config.supabaseClient
-        .from('onboarding_data')
-        .update({
-          account_structure: selectedStructure,
-          current_step: 7,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
+    setError(null);
 
-      navigate('/onboarding/step-8');
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
+    if (!config.supabaseClient) {
+      setError('Configuration error');
       setIsLoading(false);
+      return;
     }
+
+    const { data: { user } } = await config.supabaseClient.auth.getUser();
+    if (!user) {
+      setError('Not authenticated');
+      setIsLoading(false);
+      return;
+    }
+
+    const { error: upsertError } = await config.supabaseClient
+      .from('onboarding_data')
+      .upsert({
+        user_id: user.id,
+        legal_first_name: firstName.trim(),
+        legal_last_name: lastName.trim(),
+        current_step: 7,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (upsertError) {
+      setError('Failed to save data');
+      setIsLoading(false);
+      return;
+    }
+
+    navigate('/onboarding/step-6');
   };
 
   const handleBack = () => {
     navigate('/onboarding/step-6');
   };
+
+  const isValid = firstName.trim() && lastName.trim();
 
   return (
     <div 
@@ -83,93 +121,93 @@ export default function OnboardingStep7() {
       <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
-        <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
+        <header className="flex items-center px-4 pt-6 pb-4 bg-white/95 backdrop-blur-sm sticky top-0 z-10">
           <button 
             onClick={handleBack}
-            aria-label="Go back"
-            className="flex size-10 shrink-0 items-center justify-center text-slate-900 rounded-full hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-1 text-slate-900 hover:text-[#2b8cee] transition-colors"
           >
             <BackIcon />
+            <span className="text-base font-bold tracking-tight">Back</span>
           </button>
+          <div className="flex-1" />
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col px-6 pb-44">
-          {/* Header Section */}
+        <main className="flex-1 flex flex-col px-6 pb-48">
+          {/* Header Section - Center Aligned */}
           <div className="mb-8 text-center">
-            <h1 className="text-slate-900 text-[22px] font-bold leading-tight tracking-tight">
-              What type of general account would you like to open?
+            <h1 className="text-slate-900 text-[22px] font-bold leading-tight tracking-tight mb-3">
+              Enter your full legal name
             </h1>
+            <p className="text-slate-500 text-[14px] font-normal leading-relaxed">
+              We are required to collect this info for verification.
+            </p>
           </div>
 
-          {/* Account Options Card */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
-            {/* Individual Account Option */}
-            <button
-              onClick={() => setSelectedStructure('individual')}
-              className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors border-b border-gray-100"
-            >
-              <span className="text-slate-900 text-base font-medium">Individual account</span>
-              <div 
-                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                  selectedStructure === 'individual'
-                    ? 'border-[#2b8cee] bg-[#2b8cee]'
-                    : 'border-slate-300 bg-white'
-                }`}
-              >
-                {selectedStructure === 'individual' && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
-                )}
-              </div>
-            </button>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+              {error}
+            </div>
+          )}
 
-            {/* Other Account Type Option */}
-            <button
-              onClick={() => setSelectedStructure('other')}
-              className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors"
-            >
-              <span className="text-slate-900 text-base font-medium">Other account type</span>
-              <div 
-                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                  selectedStructure === 'other'
-                    ? 'border-[#2b8cee] bg-[#2b8cee]'
-                    : 'border-slate-300 bg-white'
-                }`}
-              >
-                {selectedStructure === 'other' && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
-                )}
-              </div>
-            </button>
+          {/* Form Fields */}
+          <div className="flex flex-col gap-6 w-full">
+            {/* First Name Field */}
+            <div className="flex flex-col gap-2">
+              <label className="text-slate-900 text-base font-medium leading-normal pl-1">
+                Legal first name
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="e.g. Jane"
+                className="w-full h-14 px-5 rounded-full border border-gray-200 bg-white text-slate-900 placeholder:text-slate-400 text-base font-normal focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+              />
+            </div>
+
+            {/* Last Name Field */}
+            <div className="flex flex-col gap-2">
+              <label className="text-slate-900 text-base font-medium leading-normal pl-1">
+                Legal last name
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="e.g. Doe"
+                className="w-full h-14 px-5 rounded-full border border-gray-200 bg-white text-slate-900 placeholder:text-slate-400 text-base font-normal focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+              />
+            </div>
           </div>
         </main>
 
         {/* Fixed Footer - Hidden when main footer is visible */}
         {!isFooterVisible && (
-          <div className="fixed bottom-0 left-0 right-0 z-20 w-full max-w-[500px] mx-auto bg-white border-t border-slate-100 p-6 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]" data-onboarding-footer>
-            {/* Buttons */}
-            <div className="flex flex-col gap-4">
-              {/* Continue Button */}
-              <button
-                onClick={handleContinue}
-                disabled={!selectedStructure || isLoading}
-                className={`flex w-full h-12 cursor-pointer items-center justify-center rounded-full text-base font-bold transition-all active:scale-[0.98] ${
-                  selectedStructure && !isLoading
-                    ? 'bg-[#2b8cee] text-white hover:bg-[#2070c0] shadow-md shadow-[#2b8cee]/20'
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                }`}
-              >
-                {isLoading ? 'Saving...' : 'Continue'}
-              </button>
-
-              {/* Back Button */}
-              <button
-                onClick={handleBack}
-                className="flex w-full cursor-pointer items-center justify-center rounded-full bg-transparent py-2 text-slate-500 text-sm font-bold hover:text-slate-800 transition-colors"
-              >
-                Back
-              </button>
-            </div>
+          <div className="fixed bottom-0 left-0 right-0 z-20 w-full max-w-[500px] mx-auto bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 flex flex-col gap-3" data-onboarding-footer>
+            {/* Continue Button */}
+            <button
+              onClick={handleContinue}
+              disabled={!isValid || isLoading}
+              className={`
+                flex w-full cursor-pointer items-center justify-center rounded-full h-14 px-5 text-base font-bold tracking-wide transition-all active:scale-[0.98]
+                ${isValid && !isLoading
+                  ? 'bg-[#2b8cee] hover:bg-[#2070c0] text-white shadow-lg shadow-[#2b8cee]/20'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                }
+              `}
+            >
+              {isLoading ? 'Saving...' : 'Continue'}
+            </button>
+            
+            {/* Back Button */}
+            <button
+              onClick={handleBack}
+              className="flex w-full cursor-pointer items-center justify-center rounded-full bg-transparent py-2 text-slate-500 text-sm font-bold hover:text-slate-800 transition-colors"
+            >
+              Back
+            </button>
           </div>
         )}
       </div>

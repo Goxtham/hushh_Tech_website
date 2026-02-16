@@ -1,22 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
-import { AccountType, ACCOUNT_TIERS, migrateAccountType } from '../../types/onboarding';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
-
-// Diamond icon for Premium tier
-const DiamondIcon = () => (
-  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6 3H18L22 9L12 21L2 9L6 3Z" />
-  </svg>
-);
-
-// Verified/Star icon for Ultra tier
-const VerifiedIcon = () => (
-  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-  </svg>
-);
 
 // Back arrow icon
 const BackIcon = () => (
@@ -25,21 +10,95 @@ const BackIcon = () => (
   </svg>
 );
 
-// Help icon
-const HelpIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
+// Minus icon
+const MinusIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12H19" />
   </svg>
 );
 
+// Plus icon
+const PlusIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 5V19M5 12H19" />
+  </svg>
+);
+
+// Share class configurations matching HTML template
+interface ShareClass {
+  id: string;
+  name: string;
+  tier: 'ultra' | 'premium' | 'standard';
+  unitPrice: number;
+  displayPrice: string;
+  description: string;
+  stripeGradient: string;
+  hoverBorder: string;
+}
+
+const SHARE_CLASSES: ShareClass[] = [
+  {
+    id: 'class_a',
+    name: 'Class A',
+    tier: 'ultra',
+    unitPrice: 25000000,
+    displayPrice: '$25M/unit',
+    description: 'Ultra High Net Worth tier with maximum allocation priority and exclusive benefits.',
+    stripeGradient: 'from-slate-300 to-slate-500',
+    hoverBorder: 'hover:border-slate-300',
+  },
+  {
+    id: 'class_b',
+    name: 'Class B',
+    tier: 'premium',
+    unitPrice: 5000000,
+    displayPrice: '$5M/unit',
+    description: 'Premium tier with enhanced portfolio access and dedicated relationship management.',
+    stripeGradient: 'from-amber-300 to-amber-500',
+    hoverBorder: 'hover:border-amber-200',
+  },
+  {
+    id: 'class_c',
+    name: 'Class C',
+    tier: 'standard',
+    unitPrice: 1000000,
+    displayPrice: '$1M/unit',
+    description: 'Standard tier with full access to AI-powered multi-strategy alpha portfolio.',
+    stripeGradient: 'bg-[#2b8cee]',
+    hoverBorder: 'hover:border-[#2b8cee]/30',
+  },
+];
+
+// Format currency for display
+const formatCurrency = (amount: number): string => {
+  if (amount === 0) return '$0';
+  if (amount >= 1000000000) {
+    return `$${(amount / 1000000000).toFixed(1)}B`;
+  }
+  if (amount >= 1000000) {
+    return `$${(amount / 1000000).toFixed(0)}M`;
+  }
+  return `$${amount.toLocaleString()}`;
+};
+
 export default function OnboardingStep1() {
   const navigate = useNavigate();
-  const [selectedAccount, setSelectedAccount] = useState<AccountType | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const isFooterVisible = useFooterVisibility();
+  const [units, setUnits] = useState<Record<string, number>>({
+    class_a: 0,
+    class_b: 0,
+    class_c: 0,
+  });
+
+  // Calculate total investment
+  const totalInvestment = SHARE_CLASSES.reduce((total, shareClass) => {
+    return total + (units[shareClass.id] * shareClass.unitPrice);
+  }, 0);
+
+  // Check if at least one unit is selected
+  const hasSelection = Object.values(units).some(count => count > 0);
 
   useEffect(() => {
     // Scroll to top on component mount
@@ -47,10 +106,9 @@ export default function OnboardingStep1() {
   }, []);
 
   useEffect(() => {
-    // Get current user
     const getCurrentUser = async () => {
       if (!config.supabaseClient) return;
-      
+
       const { data: { user } } = await config.supabaseClient.auth.getUser();
       if (!user) {
         navigate('/login');
@@ -79,45 +137,50 @@ export default function OnboardingStep1() {
         }
       }
 
-      // Check if user already has onboarding data
+      // Load existing selections if any
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('account_type, current_step')
+        .select('class_a_units, class_b_units, class_c_units')
         .eq('user_id', user.id)
         .single();
 
-      if (onboardingData?.account_type) {
-        // Migrate legacy account types if needed
-        const migratedType = migrateAccountType(onboardingData.account_type);
-        setSelectedAccount(migratedType);
+      if (onboardingData) {
+        setUnits({
+          class_a: onboardingData.class_a_units || 0,
+          class_b: onboardingData.class_b_units || 0,
+          class_c: onboardingData.class_c_units || 0,
+        });
       }
     };
 
     getCurrentUser();
   }, [navigate]);
 
-  const handleContinue = async () => {
-    if (!selectedAccount || !userId || !config.supabaseClient) return;
+  const handleUnitChange = (classId: string, delta: number) => {
+    setUnits(prev => ({
+      ...prev,
+      [classId]: Math.max(0, prev[classId] + delta),
+    }));
+  };
+
+  const handleNext = async () => {
+    if (!userId || !config.supabaseClient || !hasSelection) return;
 
     setIsLoading(true);
     try {
-      // Save to Supabase
-      const { error } = await config.supabaseClient
+      // Save share unit selections to database
+      await config.supabaseClient
         .from('onboarding_data')
-        .upsert({
-          user_id: userId,
-          account_type: selectedAccount,
+        .update({
+          selected_fund: 'hushh_fund_a',
+          class_a_units: units.class_a,
+          class_b_units: units.class_b,
+          class_c_units: units.class_c,
+          initial_investment_amount: totalInvestment,
           current_step: 1,
-          completed_steps: [1],
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) {
-        console.error('Error saving onboarding data:', error);
-        return;
-      }
+        })
+        .eq('user_id', userId);
 
       // Navigate to step 2
       navigate('/onboarding/step-2');
@@ -128,30 +191,90 @@ export default function OnboardingStep1() {
     }
   };
 
-  // Account tier data matching the HTML template
-  const tierData = [
-    {
-      id: 'wealth_1m' as AccountType,
-      minimum: '$1 million',
-      name: 'Hushh Wealth Investment Account',
-      description: 'A flexible wealth investment account designed to help you build and preserve long-term wealth through AI-powered strategies.',
-      badge: null,
-    },
-    {
-      id: 'wealth_5m' as AccountType,
-      minimum: '$5 million',
-      name: 'Hushh Wealth Investment Account',
-      description: 'Enhanced wealth management with premium portfolio strategies and dedicated relationship support.',
-      badge: 'PREMIUM',
-    },
-    {
-      id: 'ultra_25m' as AccountType,
-      minimum: '$25 million',
-      name: 'Hushh Ultra High Net Worth Investment Account',
-      description: 'Exclusive investment access tailored for ultra high net worth individuals and families worldwide, with bespoke portfolio solutions.',
-      badge: 'ULTRA',
-    },
-  ];
+  const handleBack = () => {
+    navigate('/onboarding/financial-link');
+  };
+
+  // Render share class card
+  const renderShareClassCard = (shareClass: ShareClass) => {
+    const unitCount = units[shareClass.id];
+    const isUltra = shareClass.tier === 'ultra';
+    const isPremium = shareClass.tier === 'premium';
+
+    return (
+      <div
+        key={shareClass.id}
+        className={`group relative rounded-xl border border-slate-200 bg-white p-5 transition-all ${shareClass.hoverBorder} hover:shadow-md`}
+      >
+        {/* Left colored vertical stripe */}
+        <div 
+          className={`absolute left-0 top-4 h-8 w-1 rounded-r-full ${
+            shareClass.tier === 'standard' 
+              ? 'bg-[#2b8cee]' 
+              : `bg-gradient-to-b ${shareClass.stripeGradient}`
+          }`}
+        />
+        
+        <div className="flex flex-col gap-4">
+          {/* Top row: Class name, badge, price */}
+          <div className="flex items-start justify-between">
+            <div className="max-w-[65%]">
+              <h3 className="text-slate-900 text-lg font-bold">{shareClass.name}</h3>
+              
+              {/* Tier badge */}
+              {isUltra && (
+                <div className="inline-flex mt-1 items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 uppercase tracking-wide">
+                  ULTRA
+                </div>
+              )}
+              {isPremium && (
+                <div className="inline-flex mt-1 items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 uppercase tracking-wide">
+                  PREMIUM
+                </div>
+              )}
+              
+              <p className="text-slate-500 text-xs font-medium mt-2 leading-relaxed">
+                {shareClass.description}
+              </p>
+            </div>
+            
+            <div className="text-right shrink-0">
+              <p className="text-slate-900 text-lg font-bold">{shareClass.displayPrice}</p>
+            </div>
+          </div>
+
+          {/* Bottom row: Units selector */}
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Units</span>
+            
+            <div className="flex items-center gap-3 bg-slate-50 rounded-full p-1 border border-slate-100">
+              {/* Minus button */}
+              <button
+                onClick={() => handleUnitChange(shareClass.id, -1)}
+                disabled={unitCount === 0}
+                className="flex size-10 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-300 transition-colors disabled:opacity-50"
+              >
+                <MinusIcon />
+              </button>
+              
+              {/* Unit count */}
+              <span className="w-8 text-center text-slate-900 font-bold text-lg">
+                {unitCount}
+              </span>
+              
+              {/* Plus button */}
+              <button
+                onClick={() => handleUnitChange(shareClass.id, 1)}
+                className="flex size-10 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-900 shadow-sm hover:border-slate-300 active:bg-slate-50 transition-colors"
+              >
+                <PlusIcon />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div 
@@ -163,145 +286,83 @@ export default function OnboardingStep1() {
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             aria-label="Go back"
             className="flex size-10 shrink-0 items-center justify-center text-slate-900 rounded-full hover:bg-slate-50 transition-colors"
           >
             <BackIcon />
           </button>
-          <div className="flex-1" />
-          <button 
-            className="flex size-10 shrink-0 items-center justify-center text-slate-900 rounded-full hover:bg-slate-50 transition-colors"
-            aria-label="Help"
-          >
-            <HelpIcon />
-          </button>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col px-6 pb-52">
+        <main className="flex-1 flex flex-col px-6 pb-44">
           {/* Header Section */}
-          <div className="flex flex-col items-center text-center mt-2 mb-8 space-y-3">
-            <h1 className="text-slate-900 text-[22px] font-extrabold leading-tight tracking-tight">
-              Select Your Account
+          <div className="mb-8 mt-2 flex flex-col items-center text-center">
+            <h1 className="text-slate-900 text-[22px] font-extrabold leading-tight tracking-tight mb-2">
+              Hushh Fund A: AI-Powered Multi-Strategy Alpha
             </h1>
-            <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[280px]">
-              Choose the investment level that best fits your financial goals.
+            <p className="text-slate-500 text-sm font-bold tracking-wide uppercase">
+              TAGLINE: The AI-Powered Berkshire Hathaway
             </p>
           </div>
 
-          {/* Account Options */}
-          <div className="flex flex-col gap-4 w-full">
-            {tierData.map((tier) => {
-              const isSelected = selectedAccount === tier.id;
-              const isPremium = tier.badge === 'PREMIUM';
-              const isUltra = tier.badge === 'ULTRA';
+          {/* Info Card */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 mb-8 text-center shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            <p className="text-slate-900 font-bold mb-2 text-base">
+              Select the number of units for each share class. You can invest in multiple classes.
+            </p>
+            <p className="text-slate-600 text-sm font-medium leading-relaxed">
+              Our inaugural fund demonstrating an AI-driven value investing strategy designed to deliver consistent, market-beating returns and sustainable, risk-adjusted alpha.
+            </p>
+          </div>
 
-              return (
-                <label
-                  key={tier.id}
-                  className="group relative flex flex-col w-full cursor-pointer select-none"
-                >
-                  <input
-                    type="radio"
-                    name="tier_selection"
-                    value={tier.id}
-                    checked={isSelected}
-                    onChange={() => setSelectedAccount(tier.id)}
-                    className="peer sr-only"
-                  />
-                  <div
-                    className={`
-                      flex flex-col p-5 rounded-2xl border-2 bg-white transition-all duration-300 ease-out
-                      ${isSelected 
-                        ? 'border-[#2b8cee] shadow-[0_0_20px_-5px_rgba(43,140,238,0.3)] bg-[rgba(43,140,238,0.03)]' 
-                        : 'border-slate-200 group-hover:border-slate-300'
-                      }
-                    `}
-                  >
-                    {/* Minimum Amount & Radio Button Row */}
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex flex-col">
-                        <span className="text-xl font-extrabold text-slate-900 tracking-tight">
-                          {tier.minimum}{' '}
-                          <span className="text-sm font-semibold text-slate-400 uppercase tracking-wide ml-0.5">
-                            minimum
-                          </span>
-                        </span>
-                      </div>
-                      {/* Custom Radio UI */}
-                      <div 
-                        className={`
-                          w-6 h-6 rounded-full border-2 relative transition-all duration-200 shrink-0
-                          ${isSelected 
-                            ? 'bg-[#2b8cee] border-[#2b8cee]' 
-                            : 'border-slate-300'
-                          }
-                        `}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Account Name & Badge Row */}
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h3 className="text-lg font-bold text-slate-900 leading-tight">
-                        {tier.name}
-                      </h3>
-                      {isPremium && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gradient-to-r from-gray-100 to-[#E5E4E2] text-slate-600 border border-slate-200 shadow-sm flex items-center gap-1 shrink-0">
-                          <DiamondIcon /> PREMIUM
-                        </span>
-                      )}
-                      {isUltra && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gradient-to-r from-[#FFF8E1] to-[#FFE082] text-yellow-800 border border-yellow-200 shadow-sm flex items-center gap-1 shrink-0">
-                          <VerifiedIcon /> ULTRA
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                      {tier.description}
-                    </p>
-                  </div>
-                </label>
-              );
-            })}
+          {/* Share Class Cards */}
+          <div className="flex flex-col gap-6">
+            {SHARE_CLASSES.map(renderShareClassCard)}
           </div>
         </main>
 
         {/* Fixed Footer - Hidden when main footer is visible */}
         {!isFooterVisible && (
           <div className="fixed bottom-0 left-0 right-0 z-20 w-full max-w-[500px] mx-auto bg-white border-t border-slate-100 p-6 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]" data-onboarding-footer>
-            {/* Continue Button */}
-            <button
-              onClick={handleContinue}
-              disabled={!selectedAccount || isLoading}
-              className={`
-                w-full flex items-center justify-center h-14 rounded-full font-bold text-base tracking-wide transition-all mb-4
-                ${selectedAccount && !isLoading
-                  ? 'bg-[#2b8cee] hover:bg-blue-600 active:scale-[0.98] text-white cursor-pointer'
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                }
-              `}
-            >
-              {isLoading ? 'Saving...' : 'Continue'}
-            </button>
-            
+            {/* Total Investment */}
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-xs font-bold text-slate-500 tracking-wider uppercase">
+                TOTAL INVESTMENT
+              </span>
+              <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                {formatCurrency(totalInvestment)}
+              </span>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-4">
+              {/* Next Button */}
+              <button
+                onClick={handleNext}
+                disabled={!hasSelection || isLoading}
+                className={`flex w-full cursor-pointer items-center justify-center rounded-full bg-[#2b8cee] py-4 text-white text-base font-bold transition-all hover:bg-blue-600 active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400 ${
+                  !hasSelection || isLoading ? 'disabled:cursor-not-allowed' : ''
+                }`}
+              >
+                {isLoading ? 'Saving...' : 'Next'}
+              </button>
+
+              {/* Back Button */}
+              <button
+                onClick={handleBack}
+                className="flex w-full cursor-pointer items-center justify-center rounded-full bg-transparent py-2 text-slate-500 text-sm font-bold hover:text-slate-800 transition-colors"
+              >
+                Back
+              </button>
+            </div>
+
             {/* Footer Note */}
-            <p className="text-center text-[10px] text-slate-400 px-4 leading-tight">
-              By continuing, you agree to the{' '}
-              <a href="/terms" className="underline decoration-slate-300 hover:text-[#2b8cee] transition-colors">
-                Terms of Service
-              </a>{' '}
-              and{' '}
-              <a href="/privacy" className="underline decoration-slate-300 hover:text-[#2b8cee] transition-colors">
-                Privacy Policy
-              </a>.
-            </p>
+            <div className="mt-4 text-center">
+              <p className="text-[10px] text-slate-400 leading-tight">
+                Minimum investment per unit • Units can be adjusted later
+              </p>
+            </div>
           </div>
         )}
       </div>

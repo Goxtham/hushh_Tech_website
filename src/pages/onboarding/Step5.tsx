@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import config from '../../resources/config/config';
+import type { AccountStructure } from '../../types/onboarding';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
 // Back arrow icon
@@ -14,6 +14,7 @@ const BackIcon = () => (
 export default function OnboardingStep5() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedStructure, setSelectedStructure] = useState<AccountStructure | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const isFooterVisible = useFooterVisibility();
 
@@ -32,27 +33,37 @@ export default function OnboardingStep5() {
         return;
       }
       setUserId(user.id);
+
+      // Load existing data if any
+      const { data: onboardingData } = await config.supabaseClient
+        .from('onboarding_data')
+        .select('account_structure')
+        .eq('user_id', user.id)
+        .single();
+
+      if (onboardingData?.account_structure) {
+        setSelectedStructure(onboardingData.account_structure as AccountStructure);
+      }
     };
 
     getCurrentUser();
   }, [navigate]);
 
   const handleContinue = async () => {
-    if (!userId || !config.supabaseClient) return;
+    if (!selectedStructure || !userId || !config.supabaseClient) return;
 
     setIsLoading(true);
     try {
-      // Update current step in database
       await config.supabaseClient
         .from('onboarding_data')
         .update({
+          account_structure: selectedStructure,
           current_step: 5,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId);
 
-      // Navigate to step 6
-      navigate('/onboarding/step-6');
+      navigate('/onboarding/step-4');
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -84,28 +95,52 @@ export default function OnboardingStep5() {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col px-6 pb-44">
-          {/* Lottie Animation */}
-          <div className="flex justify-center mb-6">
-            <div style={{ width: '200px', height: '200px' }}>
-              <DotLottieReact
-                src="https://lottie.host/58d10cd9-7087-4394-bb55-3ad6f07d3db6/9epWGP0u3F.lottie"
-                loop
-                autoplay
-              />
-            </div>
+          {/* Header Section */}
+          <div className="mb-8 text-center">
+            <h1 className="text-slate-900 text-[22px] font-bold leading-tight tracking-tight">
+              What type of general account would you like to open?
+            </h1>
           </div>
 
-          {/* Content Card */}
-          <div className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-            {/* Heading */}
-            <h1 className="text-slate-900 text-2xl font-bold leading-tight tracking-tight mb-4 text-center">
-              Let's continue with some information about you
-            </h1>
+          {/* Account Options Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
+            {/* Individual Account Option */}
+            <button
+              onClick={() => setSelectedStructure('individual')}
+              className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors border-b border-gray-100"
+            >
+              <span className="text-slate-900 text-base font-medium">Individual account</span>
+              <div 
+                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  selectedStructure === 'individual'
+                    ? 'border-[#2b8cee] bg-[#2b8cee]'
+                    : 'border-slate-300 bg-white'
+                }`}
+              >
+                {selectedStructure === 'individual' && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+                )}
+              </div>
+            </button>
 
-            {/* Description */}
-            <p className="text-slate-500 text-base font-medium leading-relaxed text-center">
-              To comply with federal regulations, and as is typical with any investment platform, we are required to collect certain personal information about you.
-            </p>
+            {/* Other Account Type Option */}
+            <button
+              onClick={() => setSelectedStructure('other')}
+              className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors"
+            >
+              <span className="text-slate-900 text-base font-medium">Other account type</span>
+              <div 
+                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  selectedStructure === 'other'
+                    ? 'border-[#2b8cee] bg-[#2b8cee]'
+                    : 'border-slate-300 bg-white'
+                }`}
+              >
+                {selectedStructure === 'other' && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+                )}
+              </div>
+            </button>
           </div>
         </main>
 
@@ -117,10 +152,14 @@ export default function OnboardingStep5() {
               {/* Continue Button */}
               <button
                 onClick={handleContinue}
-                disabled={isLoading}
-                className="flex w-full h-12 cursor-pointer items-center justify-center rounded-full bg-[#2b8cee] text-white text-base font-bold transition-all hover:bg-[#2070c0] active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                disabled={!selectedStructure || isLoading}
+                className={`flex w-full h-12 cursor-pointer items-center justify-center rounded-full text-base font-bold transition-all active:scale-[0.98] ${
+                  selectedStructure && !isLoading
+                    ? 'bg-[#2b8cee] text-white hover:bg-[#2070c0] shadow-md shadow-[#2b8cee]/20'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                }`}
               >
-                {isLoading ? 'Loading...' : 'Continue'}
+                {isLoading ? 'Saving...' : 'Continue'}
               </button>
 
               {/* Back Button */}
@@ -130,13 +169,6 @@ export default function OnboardingStep5() {
               >
                 Back
               </button>
-            </div>
-
-            {/* Footer Note */}
-            <div className="mt-4 text-center">
-              <p className="text-[10px] text-slate-400 leading-tight">
-                Secure. Private. AI-Powered.
-              </p>
             </div>
           </div>
         )}

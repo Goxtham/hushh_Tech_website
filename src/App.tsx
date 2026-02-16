@@ -64,8 +64,6 @@ const OnboardingStep10 = React.lazy(() => import('./pages/onboarding/Step10'));
 import OnboardingStep11 from './pages/onboarding/Step11';
 import OnboardingStep12 from './pages/onboarding/Step12';
 import OnboardingStep13 from './pages/onboarding/Step13';
-import OnboardingStep14 from './pages/onboarding/Step14';
-import OnboardingStep15 from './pages/onboarding/Step15';
 import VerifyIdentityPage from './pages/onboarding/VerifyIdentity';
 import VerifyCompletePage from './pages/onboarding/VerifyComplete';
 import MeetCeoPage from './pages/onboarding/MeetCeo';
@@ -294,16 +292,6 @@ function App() {
             <Route path="/onboarding/step-13" element={
               <ProtectedRoute>
                 <OnboardingStep13 />
-              </ProtectedRoute>
-            } />
-            <Route path="/onboarding/step-14" element={
-              <ProtectedRoute>
-                <OnboardingStep14 />
-              </ProtectedRoute>
-            } />
-            <Route path="/onboarding/step-15" element={
-              <ProtectedRoute>
-                <OnboardingStep15 />
               </ProtectedRoute>
             } />
             <Route path="/onboarding/verify" element={

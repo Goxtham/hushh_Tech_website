@@ -101,52 +101,60 @@ export const ACCOUNT_TIERS: Record<AccountType, AccountTierInfo> = {
 export interface OnboardingData {
   id: string;
   user_id: string;
-  
-  // Step 1: Account Type
+
+  // LEGACY: Account Type (removed from flow, kept for backward compatibility)
   account_type?: AccountType | LegacyAccountType;
-  
-  // Step 3: Fund Selection
+
+  // Step 1: Fund & Share Class Selection (was Step 3)
   selected_fund?: string;
-  
-  // Step 4: Referral Source
+  class_a_units?: number;
+  class_b_units?: number;
+  class_c_units?: number;
+
+  // Step 2: Referral Source (was Step 4)
   referral_source?: ReferralSource;
   referral_source_other?: string;
-  
-  // Step 6: Residence
+
+  // Step 3: Information intro (was Step 5 - no data stored)
+
+  // Step 4: Residence (was Step 6)
   citizenship_country?: string;
   residence_country?: string;
-  
-  // Step 7: Account Structure
+
+  // Step 5: Account Structure (was Step 7)
   account_structure?: AccountStructure;
-  
-  // Step 8: Phone Number
+
+  // Step 6: Phone Number (was Step 8)
   phone_number?: string;
   phone_country_code?: string;
-  
-  // Step 9: Legal Name
+
+  // Step 7: Legal Name (was Step 9)
   legal_first_name?: string;
   legal_last_name?: string;
-  
-  // Step 10: Address
+
+  // Step 8: Address (was Step 10)
   address_line_1?: string;
   address_line_2?: string;
   city?: string;
   state?: string;
   zip_code?: string;
   address_phone_number?: string;
-  
-  // Step 11: Sensitive Info
+
+  // Step 9: Sensitive Info (was Step 11)
   ssn_encrypted?: string;
   date_of_birth?: string;
-  
-  // Step 12: Initial Investment
+
+  // Step 10: Initial Investment (was Step 12)
   initial_investment_amount?: number;
-  
-  // Step 13: Recurring Investment
+
+  // Step 11: Recurring Investment (was Step 13)
   recurring_investment_enabled?: boolean;
   recurring_frequency?: RecurringFrequency;
   recurring_amount?: number;
   recurring_day_of_month?: number;
+
+  // Step 12: (was Step 14)
+  // Step 13: Banking Info (was Step 15)
   
   // Progress Tracking
   current_step: number;
@@ -161,38 +169,42 @@ export interface OnboardingData {
 
 // Partial types for each step
 export interface Step1Data {
-  account_type: AccountType;
-}
-
-export interface Step3Data {
   selected_fund: string;
+  class_a_units?: number;
+  class_b_units?: number;
+  class_c_units?: number;
+  initial_investment_amount?: number;
 }
 
-export interface Step4Data {
+export interface Step2Data {
   referral_source: ReferralSource;
   referral_source_other?: string;
 }
 
-export interface Step6Data {
+export interface Step3Data {
+  // Information intro - no data stored
+}
+
+export interface Step4Data {
   citizenship_country: string;
   residence_country: string;
 }
 
-export interface Step7Data {
+export interface Step5Data {
   account_structure: AccountStructure;
 }
 
-export interface Step8Data {
+export interface Step6Data {
   phone_number: string;
   phone_country_code: string;
 }
 
-export interface Step9Data {
+export interface Step7Data {
   legal_first_name: string;
   legal_last_name: string;
 }
 
-export interface Step10Data {
+export interface Step8Data {
   address_line_1: string;
   address_line_2?: string;
   city: string;
@@ -201,20 +213,28 @@ export interface Step10Data {
   address_phone_number: string;
 }
 
-export interface Step11Data {
+export interface Step9Data {
   ssn_encrypted: string;
   date_of_birth: string;
 }
 
-export interface Step12Data {
+export interface Step10Data {
   initial_investment_amount: number;
 }
 
-export interface Step13Data {
+export interface Step11Data {
   recurring_investment_enabled: boolean;
   recurring_frequency?: RecurringFrequency;
   recurring_amount?: number;
   recurring_day_of_month?: number;
+}
+
+export interface Step12Data {
+  // Step 12 data (was Step 14)
+}
+
+export interface Step13Data {
+  // Banking info (was Step 15)
 }
 
 // Onboarding context/state type

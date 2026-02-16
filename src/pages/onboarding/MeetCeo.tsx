@@ -365,7 +365,7 @@ function MeetCeoPage() {
   };
 
   const handleBack = () => {
-    navigate('/onboarding/step-14');
+    navigate('/onboarding/step-12');
   };
 
   // Loading/Verifying state with shimmer

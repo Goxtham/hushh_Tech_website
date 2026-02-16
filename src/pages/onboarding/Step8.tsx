@@ -1,10 +1,26 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
+import { getAllCountries, getStatesOfCountry, getCitiesOfState } from '../../data/locationData';
 
 // Edge Function URL for GPS geocoding (real-time location detection)
 const LOCATION_GEOCODE_API = `${config.SUPABASE_URL}/functions/v1/hushh-location-geocode`;
+
+// Types for location data
+interface Country {
+  isoCode: string;
+  name: string;
+}
+
+interface State {
+  isoCode: string;
+  name: string;
+}
+
+interface City {
+  name: string;
+}
 
 // Back arrow icon
 const BackIcon = () => (
@@ -13,104 +29,227 @@ const BackIcon = () => (
   </svg>
 );
 
-// Chevron down icon for select
+// Info icon for helper text
+const InfoIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 flex-shrink-0 mt-0.5">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 16v-4" />
+    <path d="M12 8h.01" />
+  </svg>
+);
+
+// Chevron down icon for selects
 const ChevronDownIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
     <path d="M6 9l6 6 6-6" />
   </svg>
 );
 
-// Country codes with flags (sorted by most common)
-const countryCodes = [
-  { code: '+1', country: 'USA', flag: '🇺🇸' },
-  { code: '+91', country: 'India', flag: '🇮🇳' },
-  { code: '+44', country: 'UK', flag: '🇬🇧' },
-  { code: '+86', country: 'China', flag: '🇨🇳' },
-  { code: '+81', country: 'Japan', flag: '🇯🇵' },
-  { code: '+49', country: 'Germany', flag: '🇩🇪' },
-  { code: '+33', country: 'France', flag: '🇫🇷' },
-  { code: '+61', country: 'Australia', flag: '🇦🇺' },
-  { code: '+65', country: 'Singapore', flag: '🇸🇬' },
-  { code: '+971', country: 'UAE', flag: '🇦🇪' },
-  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
-  { code: '+82', country: 'South Korea', flag: '🇰🇷' },
-  { code: '+55', country: 'Brazil', flag: '🇧🇷' },
-  { code: '+52', country: 'Mexico', flag: '🇲🇽' },
-  { code: '+39', country: 'Italy', flag: '🇮🇹' },
-  { code: '+34', country: 'Spain', flag: '🇪🇸' },
-  { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
-  { code: '+7', country: 'Russia', flag: '🇷🇺' },
-  { code: '+62', country: 'Indonesia', flag: '🇮🇩' },
-  { code: '+60', country: 'Malaysia', flag: '🇲🇾' },
-  { code: '+66', country: 'Thailand', flag: '🇹🇭' },
-  { code: '+63', country: 'Philippines', flag: '🇵🇭' },
-  { code: '+92', country: 'Pakistan', flag: '🇵🇰' },
-  { code: '+880', country: 'Bangladesh', flag: '🇧🇩' },
-  { code: '+27', country: 'South Africa', flag: '🇿🇦' },
-  { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
-  { code: '+20', country: 'Egypt', flag: '🇪🇬' },
-  { code: '+90', country: 'Turkey', flag: '🇹🇷' },
-  { code: '+48', country: 'Poland', flag: '🇵🇱' },
-  { code: '+46', country: 'Sweden', flag: '🇸🇪' },
-  { code: '+47', country: 'Norway', flag: '🇳🇴' },
-  { code: '+45', country: 'Denmark', flag: '🇩🇰' },
-  { code: '+358', country: 'Finland', flag: '🇫🇮' },
-  { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
-  { code: '+43', country: 'Austria', flag: '🇦🇹' },
-  { code: '+32', country: 'Belgium', flag: '🇧🇪' },
-  { code: '+351', country: 'Portugal', flag: '🇵🇹' },
-  { code: '+30', country: 'Greece', flag: '🇬🇷' },
-  { code: '+353', country: 'Ireland', flag: '🇮🇪' },
-  { code: '+972', country: 'Israel', flag: '🇮🇱' },
-  { code: '+54', country: 'Argentina', flag: '🇦🇷' },
-  { code: '+56', country: 'Chile', flag: '🇨🇱' },
-  { code: '+57', country: 'Colombia', flag: '🇨🇴' },
-  { code: '+51', country: 'Peru', flag: '🇵🇪' },
-  { code: '+58', country: 'Venezuela', flag: '🇻🇪' },
-  { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
-  { code: '+852', country: 'Hong Kong', flag: '🇭🇰' },
-  { code: '+84', country: 'Vietnam', flag: '🇻🇳' },
-];
+// Field validation errors type
+interface FieldErrors {
+  addressLine1?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  zipCode?: string;
+}
 
-export default function OnboardingStep8() {
+function OnboardingStep8() {
   const navigate = useNavigate();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+1');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [country, setCountry] = useState(''); // Empty initially - will be set by GPS or user selection
+  const [state, setState] = useState('');
+  const [city, setCity] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const isFooterVisible = useFooterVisibility();
-  const locationAbortController = useRef<AbortController | null>(null);
 
+  // Location data from Edge Function
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
+  
+  // FIXED: Store pending GPS data in STATE (not refs) so useEffect can detect changes
+  const [pendingGpsData, setPendingGpsData] = useState<{
+    countryCode?: string;
+    stateCode?: string;
+    stateName?: string;
+    city?: string;
+    postalCode?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+  } | null>(null);
+  
+  // Track if initial data loading is complete (for disabling continue button)
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [countriesLoaded, setCountriesLoaded] = useState(false);
+
+  // Scroll to top on component mount
   useEffect(() => {
-    // Scroll to top on component mount
     window.scrollTo(0, 0);
   }, []);
 
-  // Real-time GPS detection function
-  const detectLocationRealTime = async (uid: string) => {
-    if (!navigator.geolocation) {
-      console.log('[Step8] Geolocation not available');
+  // Load countries on mount (static list - no heavy processing)
+  useEffect(() => {
+    setLoadingCountries(true);
+    const allCountries = getAllCountries();
+    setCountries(allCountries);
+    setCountriesLoaded(true);
+    setLoadingCountries(false);
+    console.log('[Step10] Countries loaded:', allCountries.length);
+  }, []);
+
+  // Load states when country changes (async API call)
+  useEffect(() => {
+    if (!country) {
+      setStates([]);
       return;
     }
 
-    setIsDetectingLocation(true);
-    setLocationMessage('Detecting location...');
+    let cancelled = false;
+    const loadStates = async () => {
+      setLoadingStates(true);
+      try {
+        // Find state name for the selected state (API needs country name)
+        const statesList = await getStatesOfCountry(country);
+        if (!cancelled) {
+          setStates(statesList);
+          console.log('[Step10] States loaded for', country, ':', statesList.length);
+        }
+      } catch (err) {
+        console.error('Error loading states:', err);
+      } finally {
+        if (!cancelled) setLoadingStates(false);
+      }
+    };
+    loadStates();
+    return () => { cancelled = true; };
+  }, [country]);
+
+  // Load cities when state changes (async API call)
+  useEffect(() => {
+    if (!country || !state) {
+      setCities([]);
+      return;
+    }
+
+    let cancelled = false;
+    const loadCities = async () => {
+      setLoadingCities(true);
+      try {
+        // Find state name from the states list (API needs state name, not code)
+        const stateObj = states.find(s => s.isoCode === state);
+        const stateName = stateObj?.name || state;
+        const citiesList = await getCitiesOfState(country, stateName);
+        if (!cancelled) {
+          setCities(citiesList);
+          console.log('[Step10] Cities loaded for', stateName, ':', citiesList.length);
+        }
+      } catch (err) {
+        console.error('Error loading cities:', err);
+      } finally {
+        if (!cancelled) setLoadingCities(false);
+      }
+    };
+    loadCities();
+    return () => { cancelled = true; };
+  }, [country, state, states]);
+
+  // ============================================
+  // FIX: Watch for dropdown data loading and apply pending GPS values
+  // This solves the race condition where GPS data arrives before dropdowns load
+  // ============================================
+
+  // Apply pending country when countries list loads
+  useEffect(() => {
+    if (countries.length > 0 && pendingGpsCountry.current) {
+      const countryCode = pendingGpsCountry.current;
+      const countryExists = countries.some(c => c.isoCode === countryCode);
+      if (countryExists) {
+        console.log('[Step10] Applying pending GPS country:', countryCode);
+        setCountry(countryCode);
+      }
+      pendingGpsCountry.current = null;
+    }
+  }, [countries]);
+
+  // Apply pending state when states list loads
+  useEffect(() => {
+    if (states.length > 0 && pendingGpsState.current) {
+      const stateCode = pendingGpsState.current;
+      const stateExists = states.some(s => s.isoCode === stateCode || s.name === stateCode);
+      if (stateExists) {
+        // Use isoCode if it matches, otherwise use name
+        const matchingState = states.find(s => s.isoCode === stateCode || s.name === stateCode);
+        if (matchingState) {
+          console.log('[Step10] Applying pending GPS state:', matchingState.isoCode);
+          setState(matchingState.isoCode);
+        }
+      }
+      pendingGpsState.current = null;
+    }
+  }, [states]);
+
+  // Apply pending city when cities list loads
+  useEffect(() => {
+    if (cities.length > 0 && pendingGpsCity.current) {
+      const cityName = pendingGpsCity.current;
+      const cityExists = cities.some(c => c.name === cityName);
+      if (cityExists) {
+        console.log('[Step10] Applying pending GPS city:', cityName);
+        setCity(cityName);
+      }
+      pendingGpsCity.current = null;
+    }
+  }, [cities]);
+
+  // AI Address Inference state
+  const [isInferringAddress, setIsInferringAddress] = useState(false);
+  const [inferenceMessage, setInferenceMessage] = useState<string | null>(null);
+  const inferenceAbortController = useRef<AbortController | null>(null);
+  const gpsAbortController = useRef<AbortController | null>(null);
+
+  // Refs to store pending GPS values (to apply after dropdowns load)
+  const pendingGpsCountry = useRef<string | null>(null);
+  const pendingGpsState = useRef<string | null>(null);
+  const pendingGpsCity = useRef<string | null>(null);
+  const pendingGpsZip = useRef<string | null>(null);
+  const pendingGpsAddress1 = useRef<string | null>(null);
+  const pendingGpsAddress2 = useRef<string | null>(null);
+
+  // Lightweight Address Inference API URL
+  const ADDRESS_INFERENCE_API = 'https://ibsisfnjxeowvdtvgzff.supabase.co/functions/v1/hushh-address-inference';
+
+  // Real-time GPS detection function for Step 10
+  const detectAndApplyGPS = useCallback(async (uid: string) => {
+    if (!navigator.geolocation) {
+      console.log('[Step10] Geolocation not available');
+      return null;
+    }
+
+    setIsInferringAddress(true);
+    setInferenceMessage('📍 Detecting your location...');
 
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 60000, // 1 minute cache - fresher than Step 6
+          maximumAge: 60000, // 1 minute cache - fresh data
         });
       });
 
       const { latitude, longitude } = position.coords;
-      console.log(`[Step8] Real-time GPS: ${latitude}, ${longitude}`);
+      console.log(`[Step10] Real-time GPS: ${latitude}, ${longitude}`);
 
-      locationAbortController.current = new AbortController();
+      gpsAbortController.current = new AbortController();
 
       const response = await fetch(LOCATION_GEOCODE_API, {
         method: 'POST',
@@ -120,140 +259,460 @@ export default function OnboardingStep8() {
           'Authorization': `Bearer ${config.SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({ latitude, longitude }),
-        signal: locationAbortController.current.signal,
+        signal: gpsAbortController.current.signal,
       });
 
       const result = await response.json();
 
-      if (result.success && result.data?.phoneDialCode) {
-        const dialCode = result.data.phoneDialCode;
-        const dialCodeExists = countryCodes.some(c => c.code === dialCode);
-        
-        if (dialCodeExists) {
-          setCountryCode(dialCode);
-          setLocationMessage(`📍 ${result.data.city || result.data.country}`);
-          console.log('[Step8] Real-time GPS dial code:', dialCode);
+      if (result.success && result.data) {
+        const gpsData = result.data;
+        console.log('[Step10] Real-time GPS data:', gpsData);
 
-          // Update cache for other steps
-          if (config.supabaseClient) {
-            await config.supabaseClient
-              .from('onboarding_data')
-              .update({
-                gps_detected_phone_dial_code: dialCode,
-                gps_location_data: result.data,
-                gps_detected_country: result.data.country,
-                gps_detected_state: result.data.state,
-                gps_detected_city: result.data.city,
-                gps_detected_postal_code: result.data.postalCode,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('user_id', uid);
-          }
+        // Update cache for consistency
+        if (config.supabaseClient) {
+          await config.supabaseClient
+            .from('onboarding_data')
+            .update({
+              gps_location_data: gpsData,
+              gps_detected_country: gpsData.country,
+              gps_detected_state: gpsData.state,
+              gps_detected_city: gpsData.city,
+              gps_detected_postal_code: gpsData.postalCode,
+              gps_detected_phone_dial_code: gpsData.phoneDialCode,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', uid);
         }
-        
-        setTimeout(() => setLocationMessage(null), 2000);
+
+        setInferenceMessage(`📍 ${gpsData.city || gpsData.country}`);
+        setTimeout(() => setInferenceMessage(null), 2000);
+
+        return gpsData;
       }
+      return null;
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
-        console.log('[Step8] GPS detection failed:', error);
+        console.log('[Step10] GPS detection failed:', error);
       }
-      setLocationMessage(null);
+      setInferenceMessage(null);
+      return null;
     } finally {
-      setIsDetectingLocation(false);
+      setIsInferringAddress(false);
     }
-  };
+  }, []);
 
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      if (!config.supabaseClient) return;
+  // Apply GPS data to form fields (FIXED: Uses pending refs to handle race condition)
+  const applyGpsDataToForm = useCallback((gpsData: {
+    country?: string;
+    countryCode?: string;
+    state?: string;
+    stateCode?: string;
+    city?: string;
+    postalCode?: string;
+    formattedAddress?: string;
+  }) => {
+    console.log('[Step10] Applying GPS data to form:', gpsData);
+    
+    // Set postal code immediately (no dropdown dependency)
+    if (gpsData.postalCode) {
+      setZipCode(gpsData.postalCode);
+    }
+    
+    // Parse formattedAddress into address lines (no dropdown dependency)
+    if (gpsData.formattedAddress) {
+      const fullAddress = gpsData.formattedAddress;
+      const cityName = gpsData.city || '';
+      const stateName = gpsData.state || '';
+      const postalCode = gpsData.postalCode || '';
+      const countryName = gpsData.country || '';
       
-      const { data: { user } } = await config.supabaseClient.auth.getUser();
-      if (!user) {
-        navigate('/login');
-        return;
+      let streetPart = fullAddress;
+      
+      if (countryName && streetPart.endsWith(countryName)) {
+        streetPart = streetPart.slice(0, -countryName.length).replace(/,\s*$/, '');
       }
-      setUserId(user.id);
+      if (postalCode) {
+        streetPart = streetPart.replace(new RegExp(`\\s*${postalCode}\\s*,?`), '');
+      }
+      if (stateName) {
+        streetPart = streetPart.replace(new RegExp(`,?\\s*${stateName}\\s*$`), '');
+      }
+      if (cityName) {
+        streetPart = streetPart.replace(new RegExp(`,?\\s*${cityName}\\s*$`), '');
+      }
+      
+      streetPart = streetPart.replace(/,\s*$/, '').trim();
+      const parts = streetPart.split(',').map(p => p.trim()).filter(p => p);
+      
+      if (parts.length >= 1) {
+        setAddressLine1(parts[0]);
+        console.log('[Step10] GPS Address Line 1:', parts[0]);
+      }
+      if (parts.length >= 2) {
+        setAddressLine2(parts.slice(1).join(', '));
+        console.log('[Step10] GPS Address Line 2:', parts.slice(1).join(', '));
+      }
+    }
+    
+    // FIX: Store GPS values in refs for later application when dropdowns load
+    // This solves the race condition where dropdowns aren't ready yet
+    
+    // Country: Store in ref AND try to set directly (if countries already loaded)
+    if (gpsData.countryCode) {
+      pendingGpsCountry.current = gpsData.countryCode;
+      // Also try setting directly - if countries are already loaded, this will work
+      // If not, the useEffect watching countries will apply the pending value
+      setCountry(gpsData.countryCode);
+    }
+    
+    // State: Store in ref for later application when states load
+    if (gpsData.stateCode) {
+      pendingGpsState.current = gpsData.stateCode;
+      console.log('[Step10] Stored pending GPS state:', gpsData.stateCode);
+    } else if (gpsData.state) {
+      pendingGpsState.current = gpsData.state;
+      console.log('[Step10] Stored pending GPS state (name):', gpsData.state);
+    }
+    
+    // City: Store in ref for later application when cities load
+    if (gpsData.city) {
+      pendingGpsCity.current = gpsData.city;
+      console.log('[Step10] Stored pending GPS city:', gpsData.city);
+    }
+  }, []);
 
-      // Load existing data
+  // Load existing data with REAL-TIME GPS detection
+  useEffect(() => {
+    const loadData = async () => {
+      if (!config.supabaseClient) return;
+
+      const { data: { user } } = await config.supabaseClient.auth.getUser();
+      if (!user) return;
+
+      // 1. First, check existing onboarding data (user-entered takes priority)
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('phone_number, phone_country_code, gps_detected_phone_dial_code')
+        .select('address_line_1, address_line_2, address_country, state, city, zip_code, legal_first_name, legal_last_name, residence_country')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      // If user has already saved a phone number, use their saved data
-      if (onboardingData?.phone_number) {
-        setPhoneNumber(onboardingData.phone_number);
-        if (onboardingData?.phone_country_code) {
-          setCountryCode(onboardingData.phone_country_code);
-          console.log('[Step8] Using saved phone country code:', onboardingData.phone_country_code);
-          return;
+      // If user already has address data, use it (they may have edited it)
+      if (onboardingData?.address_line_1) {
+        setAddressLine1(onboardingData.address_line_1 || '');
+        setAddressLine2(onboardingData.address_line_2 || '');
+        setCountry(onboardingData.address_country || 'US');
+        setState(onboardingData.state || '');
+        setCity(onboardingData.city || '');
+        setZipCode(onboardingData.zip_code || '');
+        return; // User has existing data, don't override
+      }
+
+      // 2. For new users: Always detect GPS in REAL-TIME (not cached data)
+      console.log('[Step10] Detecting location in real-time...');
+      const gpsData = await detectAndApplyGPS(user.id);
+      
+      if (gpsData) {
+        applyGpsDataToForm(gpsData);
+        return; // GPS data found, don't need AI inference
+      }
+
+      // 3. GPS failed - Check for cached enriched profile data (from previous inference)
+      const { data: enrichedProfile } = await config.supabaseClient
+        .from('user_enriched_profiles')
+        .select('address')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (enrichedProfile?.address) {
+        const addr = enrichedProfile.address as {
+          line1?: string;
+          line2?: string;
+          city?: string;
+          state?: string;
+          country?: string;
+          countryCode?: string;
+          zipCode?: string;
+        };
+        console.log('[Step10] Found cached enriched profile address:', addr);
+        
+        // Pre-fill from enriched profile
+        if (addr.line1) setAddressLine1(addr.line1);
+        if (addr.line2) setAddressLine2(addr.line2);
+        if (addr.countryCode) {
+          setCountry(addr.countryCode);
+        } else if (addr.country) {
+          const countryCode = mapCountryToIsoCode(addr.country);
+          setCountry(countryCode);
+        }
+        if (addr.state) setState(addr.state);
+        if (addr.city) setCity(addr.city);
+        if (addr.zipCode) setZipCode(addr.zipCode);
+        return;
+      }
+
+      // 4. Fallback: Use residence_country from Step 6 if GPS data not available
+      if (onboardingData?.residence_country) {
+        const countryCode = mapCountryToIsoCode(onboardingData.residence_country);
+        console.log('[Step10] Using residence_country as fallback:', countryCode);
+        setCountry(countryCode);
+      }
+
+      // 5. No cached data - use lightweight address inference API if we have name
+      if (onboardingData?.legal_first_name && onboardingData?.legal_last_name) {
+        console.log('[Step10] No cached profile, calling lightweight address inference API...');
+        
+        const fullName = `${onboardingData.legal_first_name} ${onboardingData.legal_last_name}`;
+        const userEmail = user.email || '';
+        
+        setIsInferringAddress(true);
+        setInferenceMessage('🔍 Finding your location...');
+        
+        // Create abort controller for cleanup
+        inferenceAbortController.current = new AbortController();
+        
+        try {
+          const response = await fetch(ADDRESS_INFERENCE_API, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: fullName,
+              email: userEmail,
+            }),
+            signal: inferenceAbortController.current.signal,
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            console.log('[Step10] Address inference success:', result.data);
+            setInferenceMessage(`✅ Found: ${result.data.address?.city || result.data.address?.country || 'Location detected'}`);
+            
+            const addr = result.data.address;
+            
+            // Cache the inferred address for future use
+            await config.supabaseClient
+              .from('user_enriched_profiles')
+              .upsert({
+                user_id: user.id,
+                address: addr,
+                nationality: result.data.nationality,
+                confidence: result.data.confidence,
+                search_query: fullName,
+                sources: result.data.sources,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }, {
+                onConflict: 'user_id'
+              });
+
+            // Pre-fill address from API result
+            if (addr) {
+              // Set country first (triggers state dropdown loading)
+              if (addr.countryCode) {
+                setCountry(addr.countryCode);
+              } else if (addr.country) {
+                const countryCode = mapCountryToIsoCode(addr.country);
+                setCountry(countryCode);
+              }
+              
+              // Delay setting state/city to allow dropdowns to load
+              setTimeout(() => {
+                if (addr.state) setState(addr.state);
+                if (addr.city) setCity(addr.city);
+                if (addr.zipCode) setZipCode(addr.zipCode);
+              }, 500);
+            }
+            
+            // Clear message after 2 seconds
+            setTimeout(() => {
+              setInferenceMessage(null);
+            }, 2000);
+          } else {
+            console.log('[Step10] Address inference returned no data');
+            setInferenceMessage(null);
+          }
+        } catch (err) {
+          if ((err as Error).name === 'AbortError') {
+            console.log('[Step10] Address inference aborted');
+          } else {
+            console.error('[Step10] Address inference error:', err);
+          }
+          setInferenceMessage(null);
+          // Silently fail - user can enter manually
+        } finally {
+          setIsInferringAddress(false);
         }
       }
-      
-      // For new users: Always detect GPS in real-time (don't rely on stale cache)
-      console.log('[Step8] Detecting location in real-time...');
-      detectLocationRealTime(user.id);
     };
 
-    getCurrentUser();
+    loadData();
     
+    // Cleanup: abort any pending request on unmount
     return () => {
-      if (locationAbortController.current) {
-        locationAbortController.current.abort();
+      if (inferenceAbortController.current) {
+        inferenceAbortController.current.abort();
       }
     };
-  }, [navigate]);
+  }, []);
+
+  // Helper function to map country names to ISO codes
+  const mapCountryToIsoCode = (countryName: string): string => {
+    const countryMap: Record<string, string> = {
+      'United States': 'US',
+      'USA': 'US',
+      'US': 'US',
+      'India': 'IN',
+      'United Kingdom': 'GB',
+      'UK': 'GB',
+      'Canada': 'CA',
+      'Australia': 'AU',
+      'Germany': 'DE',
+      'France': 'FR',
+      'Japan': 'JP',
+      'China': 'CN',
+      'Singapore': 'SG',
+      'United Arab Emirates': 'AE',
+      'UAE': 'AE',
+    };
+    return countryMap[countryName] || countryName;
+  };
+
+  // Validation functions
+  const validateAddressLine1 = (value: string): string | undefined => {
+    if (!value.trim()) return 'Address is required';
+    if (value.trim().length < 5) return 'Address is too short';
+    if (value.trim().length > 100) return 'Address is too long';
+    // Check for basic address format (should contain letters and numbers)
+    if (!/[a-zA-Z]/.test(value)) return 'Please enter a valid address';
+    return undefined;
+  };
+
+  const validateZipCode = (value: string): string | undefined => {
+    if (!value.trim()) return 'ZIP code is required';
+    // Allow 5 or 6 digit ZIP codes
+    if (!/^\d{5,6}$/.test(value.trim())) return 'ZIP code must be 5 or 6 digits';
+    return undefined;
+  };
+
+  const validateCountry = (value: string): string | undefined => {
+    if (!value) return 'Please select a country';
+    return undefined;
+  };
+
+  const validateState = (value: string): string | undefined => {
+    if (!value) return 'Please select a state';
+    return undefined;
+  };
+
+  const validateCity = (value: string): string | undefined => {
+    if (!value) return 'Please select a city';
+    return undefined;
+  };
+
+  // Handle field blur (mark as touched)
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    
+    // Validate the field on blur
+    let error: string | undefined;
+    switch (field) {
+      case 'addressLine1':
+        error = validateAddressLine1(addressLine1);
+        break;
+      case 'zipCode':
+        error = validateZipCode(zipCode);
+        break;
+      case 'country':
+        error = validateCountry(country);
+        break;
+      case 'state':
+        error = validateState(state);
+        break;
+      case 'city':
+        error = validateCity(city);
+        break;
+    }
+    
+    setFieldErrors(prev => ({ ...prev, [field]: error }));
+  };
+
+  // Validate all fields
+  const validateAllFields = (): boolean => {
+    const errors: FieldErrors = {
+      addressLine1: validateAddressLine1(addressLine1),
+      country: validateCountry(country),
+      state: validateState(state),
+      city: validateCity(city),
+      zipCode: validateZipCode(zipCode),
+    };
+    
+    setFieldErrors(errors);
+    setTouched({
+      addressLine1: true,
+      country: true,
+      state: true,
+      city: true,
+      zipCode: true,
+    });
+    
+    return !Object.values(errors).some(e => e !== undefined);
+  };
 
   const handleContinue = async () => {
-    if (!phoneNumber || !userId || !config.supabaseClient) return;
-
-    setIsLoading(true);
-    try {
-      await config.supabaseClient
-        .from('onboarding_data')
-        .update({
-          phone_number: phoneNumber,
-          phone_country_code: countryCode,
-          current_step: 8,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
-
-      navigate('/onboarding/step-9');
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
+    // Validate all fields first
+    if (!validateAllFields()) {
+      setError('Please fix the errors above');
+      return;
     }
+
+    setLoading(true);
+    setError(null);
+
+    if (!config.supabaseClient) {
+      setError('Configuration error');
+      setLoading(false);
+      return;
+    }
+
+    const { data: { user } } = await config.supabaseClient.auth.getUser();
+    if (!user) {
+      setError('Not authenticated');
+      setLoading(false);
+      return;
+    }
+
+    const { error: upsertError } = await config.supabaseClient
+      .from('onboarding_data')
+      .upsert({
+        user_id: user.id,
+        address_line_1: addressLine1.trim(),
+        address_line_2: addressLine2.trim() || null,
+        address_country: country,
+        state: state,
+        city: city,
+        zip_code: zipCode.trim(),
+        current_step: 8,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (upsertError) {
+      setError('Failed to save data');
+      setLoading(false);
+      return;
+    }
+
+    navigate('/onboarding/step-7');
   };
 
   const handleBack = () => {
     navigate('/onboarding/step-7');
   };
 
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Format as (XXX) XXX-XXXX
-    if (digits.length <= 3) {
-      return digits;
-    } else if (digits.length <= 6) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    } else {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-    }
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ''); // Only digits
-    if (value.length <= 10) {
-      setPhoneNumber(value);
-    }
-  };
-
-  const isValidPhone = phoneNumber.length >= 10;
+  const isValid = addressLine1.trim() && country && state && city && zipCode.trim();
 
   return (
     <div 
@@ -275,55 +734,231 @@ export default function OnboardingStep8() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col px-6 pb-48">
+        <main className="flex-1 flex flex-col px-6 pb-48 overflow-y-auto">
           {/* Header Section - Center Aligned */}
           <div className="mb-8 text-center">
             <h1 className="text-slate-900 text-[22px] font-bold leading-tight tracking-tight mb-3">
-              Enter your phone number
+              Enter your address
             </h1>
             <p className="text-slate-500 text-[14px] font-normal leading-relaxed">
-              We'll send a confirmation code to verify your identity.
+              Please provide your primary residence address.
             </p>
+            
+            {/* AI Address Inference Status */}
+            {(isInferringAddress || inferenceMessage) && (
+              <div className={`mt-4 py-2 px-4 rounded-full inline-flex items-center gap-2 text-sm font-medium transition-all ${
+                isInferringAddress 
+                  ? 'bg-blue-50 text-blue-600 animate-pulse' 
+                  : 'bg-green-50 text-green-600'
+              }`}>
+                {isInferringAddress ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>{inferenceMessage || 'Finding your location...'}</span>
+                  </>
+                ) : (
+                  <span>{inferenceMessage}</span>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Phone Input Form */}
-          <div className="flex flex-col gap-4">
-            {/* Phone Input Group */}
-            <div className="flex w-full items-center gap-3">
-              {/* Country Code Selector */}
-              <div className="relative h-14 w-[110px] flex-shrink-0">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Form Card 1: Street Address */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5 mb-6 space-y-5">
+            {/* Address Line 1 */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-slate-900" htmlFor="address1">
+                Address line 1
+              </label>
+              <input
+                id="address1"
+                type="text"
+                value={addressLine1}
+                onChange={(e) => {
+                  setAddressLine1(e.target.value);
+                  // Clear error when user starts typing
+                  if (touched.addressLine1) {
+                    setFieldErrors(prev => ({ ...prev, addressLine1: validateAddressLine1(e.target.value) }));
+                  }
+                }}
+                onBlur={() => handleBlur('addressLine1')}
+                placeholder="Street address"
+                className={`w-full h-12 px-4 rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 text-base focus:outline-none focus:ring-2 transition-all ${
+                  touched.addressLine1 && fieldErrors.addressLine1
+                    ? 'border-red-400 focus:ring-red-200 focus:border-red-400'
+                    : 'border-gray-200 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee]'
+                }`}
+              />
+              {/* Error or Helper Text */}
+              {touched.addressLine1 && fieldErrors.addressLine1 ? (
+                <p className="text-red-500 text-xs font-normal leading-tight mt-1">
+                  {fieldErrors.addressLine1}
+                </p>
+              ) : (
+                <div className="flex items-start gap-1.5 mt-1.5">
+                  <InfoIcon />
+                  <p className="text-slate-400 text-xs font-normal leading-tight">
+                    Use your street address, not a P.O. Box.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Address Line 2 */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-baseline">
+                <label className="block text-sm font-medium text-slate-900" htmlFor="address2">
+                  Address line 2
+                </label>
+                <span className="text-xs text-slate-400">Optional</span>
+              </div>
+              <input
+                id="address2"
+                type="text"
+                value={addressLine2}
+                onChange={(e) => setAddressLine2(e.target.value)}
+                placeholder="Apt, suite, unit, etc."
+                className="w-full h-12 px-4 rounded-lg border border-gray-200 bg-white text-slate-900 placeholder:text-slate-400 text-base focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Form Card 2: Region Details */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5 space-y-5 mb-4">
+            {/* Country */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-slate-900" htmlFor="country">
+                Country
+              </label>
+              <div className="relative">
                 <select
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className="h-full w-full appearance-none rounded-full border border-gray-200 bg-white pl-4 pr-8 text-base font-bold text-slate-900 focus:border-[#2b8cee] focus:outline-none focus:ring-1 focus:ring-[#2b8cee] cursor-pointer"
+                  id="country"
+                  value={country}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    setState('');
+                    setCity('');
+                  }}
+                  className="w-full h-12 px-4 pr-10 rounded-lg border border-gray-200 bg-white text-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all appearance-none"
                 >
-                  {countryCodes.map((country) => (
-                    <option key={`${country.country}-${country.code}`} value={country.code}>
-                      {country.flag} {country.code}
+                  <option value="">Select country...</option>
+                  {countries.map((c) => (
+                    <option key={c.isoCode} value={c.isoCode}>
+                      {c.name}
                     </option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                   <ChevronDownIcon />
                 </div>
               </div>
+            </div>
 
-              {/* Phone Number Input */}
-              <div className="relative h-14 flex-1">
-                <input
-                  type="tel"
-                  value={formatPhoneNumber(phoneNumber)}
-                  onChange={handlePhoneChange}
-                  placeholder="(555) 000-0000"
-                  className="h-full w-full rounded-full border border-gray-200 bg-white px-5 text-base font-semibold text-slate-900 placeholder:text-slate-400 focus:border-[#2b8cee] focus:outline-none focus:ring-1 focus:ring-[#2b8cee] transition-all"
-                />
+            {/* State & City Row */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* State */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-slate-900" htmlFor="state">
+                  State
+                </label>
+                <div className="relative">
+                  <select
+                    id="state"
+                    value={state}
+                    onChange={(e) => {
+                      setState(e.target.value);
+                      setCity('');
+                    }}
+                    disabled={!country || loadingStates}
+                    className="w-full h-12 px-4 pr-10 rounded-lg border border-gray-200 bg-white text-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all appearance-none disabled:bg-slate-50 disabled:text-slate-400"
+                  >
+                    <option value="">{loadingStates ? 'Loading...' : 'Select'}</option>
+                    {states.map((s) => (
+                      <option key={s.isoCode} value={s.isoCode}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <ChevronDownIcon />
+                  </div>
+                </div>
+              </div>
+
+              {/* City */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-slate-900" htmlFor="city">
+                  City
+                </label>
+                <div className="relative">
+                  <select
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    disabled={!state || loadingCities}
+                    className="w-full h-12 px-4 pr-10 rounded-lg border border-gray-200 bg-white text-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all appearance-none disabled:bg-slate-50 disabled:text-slate-400"
+                  >
+                    <option value="">{loadingCities ? 'Loading...' : 'Select'}</option>
+                    {cities.map((c) => (
+                      <option key={c.name} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <ChevronDownIcon />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Helper Text */}
-            <p className="px-2 text-xs font-medium text-slate-400">
-              Standard message and data rates may apply.
-            </p>
+            {/* ZIP Code */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-slate-900" htmlFor="zip">
+                ZIP code
+              </label>
+              <input
+                id="zip"
+                type="text"
+                value={zipCode}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setZipCode(value);
+                  // Update validation on change
+                  if (touched.zipCode) {
+                    setFieldErrors(prev => ({ ...prev, zipCode: validateZipCode(value) }));
+                  }
+                }}
+                onBlur={() => handleBlur('zipCode')}
+                inputMode="numeric"
+                placeholder="00000"
+                className={`w-full h-12 px-4 rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 text-base focus:outline-none focus:ring-2 transition-all ${
+                  touched.zipCode && fieldErrors.zipCode
+                    ? 'border-red-400 focus:ring-red-200 focus:border-red-400'
+                    : 'border-gray-200 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee]'
+                }`}
+              />
+              {/* Error or Helper Text */}
+              {touched.zipCode && fieldErrors.zipCode ? (
+                <p className="text-red-500 text-xs font-normal leading-tight mt-1">
+                  {fieldErrors.zipCode}
+                </p>
+              ) : (
+                <p className="text-slate-400 text-xs font-normal leading-tight mt-1">
+                  Enter 5 or 6 digit ZIP code
+                </p>
+              )}
+            </div>
           </div>
         </main>
 
@@ -333,16 +968,16 @@ export default function OnboardingStep8() {
             {/* Continue Button */}
             <button
               onClick={handleContinue}
-              disabled={!isValidPhone || isLoading}
+              disabled={!isValid || loading}
               className={`
                 flex w-full cursor-pointer items-center justify-center rounded-full h-14 px-5 text-base font-bold tracking-wide transition-all active:scale-[0.98]
-                ${isValidPhone && !isLoading
-                  ? 'bg-[#2b8cee] hover:bg-[#2070c0] text-white shadow-md shadow-[#2b8cee]/20'
+                ${isValid && !loading
+                  ? 'bg-[#2b8cee] hover:bg-[#2070c0] text-white shadow-lg shadow-[#2b8cee]/20'
                   : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                 }
               `}
             >
-              {isLoading ? 'Saving...' : 'Continue'}
+              {loading ? 'Saving...' : 'Continue'}
             </button>
             
             {/* Back Button */}
@@ -358,3 +993,5 @@ export default function OnboardingStep8() {
     </div>
   );
 }
+
+export default OnboardingStep8;

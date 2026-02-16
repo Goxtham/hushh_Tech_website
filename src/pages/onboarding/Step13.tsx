@@ -3,31 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
-// Back arrow icon
+// SVG Icons
 const BackIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M19 12H5M12 19l-7-7 7-7" />
   </svg>
 );
 
-// Edit icon
-const EditIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+const BankIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2b8cee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 21H21M3 10H21M5 6L12 3L19 6M4 10V21M20 10V21M8 14V17M12 14V17M16 14V17" />
   </svg>
 );
 
-// Info icon
-const InfoIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="12" y1="16" x2="12" y2="12" />
-    <line x1="12" y1="8" x2="12.01" y2="8" />
+const LockIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2b8cee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
 );
 
-// Arrow forward icon
+const ChevronDownIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6,9 12,15 18,9" />
+  </svg>
+);
+
 const ArrowForwardIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="5" y1="12" x2="19" y2="12" />
@@ -35,35 +36,23 @@ const ArrowForwardIcon = () => (
   </svg>
 );
 
-// Wallet icon
-const WalletIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-20 text-[#2b8cee]">
-    <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
-    <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
-    <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
+// Share class pill icons
+const StarIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37" stroke="#D4AF37" strokeWidth="1">
+    <polygon points="12,2 15,8.5 22,9.3 17,14 18.2,21 12,17.5 5.8,21 7,14 2,9.3 9,8.5" />
   </svg>
 );
 
-// Close icon for modal
-const CloseIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
+const DiamondIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 3H18L22 9L12 21L2 9L6 3Z" />
   </svg>
 );
 
-// Remove icon (minus) for modal
-const RemoveIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
-// Add icon (plus) for modal
-const AddIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
+const VerifiedIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2b8cee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2L15 5L19 5L19 9L22 12L19 15L19 19L15 19L12 22L9 19L5 19L5 15L2 12L5 9L5 5L9 5L12 2Z" />
+    <polyline points="9,12 11,14 15,10" />
   </svg>
 );
 
@@ -72,9 +61,10 @@ interface ShareClassInfo {
   id: string;
   name: string;
   unitPrice: number;
-  tier: 'platinum' | 'gold' | 'standard';
-  borderGradient: string;
-  badge?: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  icon: React.ReactNode;
 }
 
 const SHARE_CLASSES: ShareClassInfo[] = [
@@ -82,25 +72,46 @@ const SHARE_CLASSES: ShareClassInfo[] = [
     id: 'class_a',
     name: 'Class A',
     unitPrice: 25000000,
-    tier: 'platinum',
-    borderGradient: 'bg-gradient-to-b from-gray-300 via-gray-100 to-gray-300',
-    badge: 'ULTRA',
+    color: '#6B7280',
+    bgColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+    icon: <DiamondIcon />,
   },
   {
     id: 'class_b',
     name: 'Class B',
     unitPrice: 5000000,
-    tier: 'gold',
-    borderGradient: 'bg-gradient-to-b from-yellow-400 via-yellow-200 to-yellow-500',
-    badge: 'PREMIUM',
+    color: '#B8860B',
+    bgColor: '#FFFAEB',
+    borderColor: 'rgba(255, 215, 0, 0.4)',
+    icon: <StarIcon />,
   },
   {
     id: 'class_c',
     name: 'Class C',
     unitPrice: 1000000,
-    tier: 'standard',
-    borderGradient: 'bg-[#2b8cee]',
+    color: '#2b8cee',
+    bgColor: '#F0F7FF',
+    borderColor: 'rgba(43, 140, 238, 0.3)',
+    icon: <VerifiedIcon />,
   },
+];
+
+// Country list
+const COUNTRIES = [
+  { code: '', name: 'Select Country' },
+  { code: 'US', name: 'United States' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'FR', name: 'France' },
+  { code: 'CH', name: 'Switzerland' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'HK', name: 'Hong Kong' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'IN', name: 'India' },
+  { code: 'AE', name: 'United Arab Emirates' },
 ];
 
 // Format currency for display
@@ -117,19 +128,34 @@ const formatCurrency = (amount: number): string => {
   return `$${amount.toLocaleString()}`;
 };
 
-const formatFullCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
-
 function OnboardingStep13() {
   const navigate = useNavigate();
   const isFooterVisible = useFooterVisibility();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Banking form state
+  const [bankName, setBankName] = useState('');
+  const [accountHolderName, setAccountHolderName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [confirmAccountNumber, setConfirmAccountNumber] = useState('');
+  const [routingNumber, setRoutingNumber] = useState('');
+  const [bankCity, setBankCity] = useState('');
+  const [bankCountry, setBankCountry] = useState('');
+  const [accountType, setAccountType] = useState<'checking' | 'savings'>('checking');
+  
+  // Touched state for showing validation errors only after user interaction
+  const [touched, setTouched] = useState({
+    bankName: false,
+    accountHolderName: false,
+    accountNumber: false,
+    confirmAccountNumber: false,
+    routingNumber: false,
+    bankCountry: false,
+    bankCity: false,
+  });
+  
+  // Share class units state
   const [shareUnits, setShareUnits] = useState<{
     class_a_units: number;
     class_b_units: number;
@@ -140,33 +166,19 @@ function OnboardingStep13() {
     class_c_units: 0,
   });
 
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [localShareUnits, setLocalShareUnits] = useState({
-    class_a_units: 0,
-    class_b_units: 0,
-    class_c_units: 0,
-  });
-  const [savingModal, setSavingModal] = useState(false);
-
   // Calculate total investment from share units
-  const calculateTotal = (units = shareUnits) => {
+  const calculateTotalInvestment = () => {
     return (
-      (units.class_a_units * 25000000) +
-      (units.class_b_units * 5000000) +
-      (units.class_c_units * 1000000)
+      (shareUnits.class_a_units * 25000000) +
+      (shareUnits.class_b_units * 5000000) +
+      (shareUnits.class_c_units * 1000000)
     );
   };
 
-  const totalInvestment = calculateTotal();
-  const modalTotalInvestment = calculateTotal(localShareUnits);
+  const totalInvestment = calculateTotalInvestment();
+  const hasAnyUnits = shareUnits.class_a_units > 0 || shareUnits.class_b_units > 0 || shareUnits.class_c_units > 0;
 
-  // Check if modal has changes
-  const hasModalChanges = 
-    localShareUnits.class_a_units !== shareUnits.class_a_units ||
-    localShareUnits.class_b_units !== shareUnits.class_b_units ||
-    localShareUnits.class_c_units !== shareUnits.class_c_units;
-
+  // Load existing data
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -180,7 +192,12 @@ function OnboardingStep13() {
 
       const { data } = await config.supabaseClient
         .from('onboarding_data')
-        .select('class_a_units, class_b_units, class_c_units, initial_investment_amount')
+        .select(`
+          class_a_units, class_b_units, class_c_units,
+          legal_first_name, legal_last_name,
+          bank_name, bank_account_holder_name, bank_account_type,
+          bank_routing_number, bank_address_city, bank_address_country
+        `)
         .eq('user_id', user.id)
         .single();
 
@@ -190,91 +207,178 @@ function OnboardingStep13() {
           class_b_units: data.class_b_units || 0,
           class_c_units: data.class_c_units || 0,
         });
+        
+        if (data.legal_first_name && data.legal_last_name && !data.bank_account_holder_name) {
+          setAccountHolderName(`${data.legal_first_name} ${data.legal_last_name}`);
+        }
+        
+        if (data.bank_name) setBankName(data.bank_name);
+        if (data.bank_account_holder_name) setAccountHolderName(data.bank_account_holder_name);
+        if (data.bank_account_type) setAccountType(data.bank_account_type as 'checking' | 'savings');
+        if (data.bank_routing_number) setRoutingNumber(data.bank_routing_number);
+        if (data.bank_address_city) setBankCity(data.bank_address_city);
+        if (data.bank_address_country) setBankCountry(data.bank_address_country);
       }
     };
 
     loadData();
   }, []);
 
-  // Open modal and initialize local state
-  const handleOpenModal = () => {
-    setLocalShareUnits({ ...shareUnits });
-    setIsModalOpen(true);
+  // Get units for a class
+  const getUnits = (classId: string): number => {
+    if (classId === 'class_a') return shareUnits.class_a_units;
+    if (classId === 'class_b') return shareUnits.class_b_units;
+    if (classId === 'class_c') return shareUnits.class_c_units;
+    return 0;
   };
 
-  // Close modal without saving
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  // Mark field as touched on blur
+  const handleBlur = (field: keyof typeof touched) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
   };
 
-  // Increment units in modal
-  const handleIncrement = (classId: string) => {
-    setLocalShareUnits(prev => ({
-      ...prev,
-      [`${classId}_units`]: (prev[`${classId}_units` as keyof typeof prev] || 0) + 1,
-    }));
+  // Validation functions for each field
+  const validateBankName = (value: string): string | null => {
+    if (!value.trim()) return 'Bank name is required';
+    if (value.trim().length < 2) return 'Bank name must be at least 2 characters';
+    if (value.trim().length > 100) return 'Bank name is too long';
+    return null;
   };
 
-  // Decrement units in modal
-  const handleDecrement = (classId: string) => {
-    setLocalShareUnits(prev => ({
-      ...prev,
-      [`${classId}_units`]: Math.max(0, (prev[`${classId}_units` as keyof typeof prev] || 0) - 1),
-    }));
+  const validateAccountHolderName = (value: string): string | null => {
+    if (!value.trim()) return 'Account holder name is required';
+    if (value.trim().length < 2) return 'Name must be at least 2 characters';
+    if (!/^[a-zA-Z\s\-'.]+$/.test(value.trim())) return 'Name should only contain letters';
+    if (value.trim().length > 100) return 'Name is too long';
+    return null;
   };
 
-  // Save modal changes to Supabase
-  const handleSaveChanges = async () => {
-    if (!hasModalChanges) return;
-    
-    setSavingModal(true);
-    
+  const validateAccountNumber = (value: string): string | null => {
+    if (!value.trim()) return 'Account number is required';
+    if (!/^\d+$/.test(value)) return 'Account number must contain only digits';
+    if (value.length < 4) return 'Account number must be at least 4 digits';
+    if (value.length > 17) return 'Account number is too long';
+    return null;
+  };
+
+  const validateConfirmAccountNumber = (value: string, original: string): string | null => {
+    if (!value.trim()) return 'Please confirm your account number';
+    if (value !== original) return 'Account numbers do not match';
+    return null;
+  };
+
+  const validateBankCountry = (value: string): string | null => {
+    if (!value) return 'Please select a country';
+    return null;
+  };
+
+  const validateRoutingNumber = (value: string, country: string): string | null => {
+    if (!value.trim()) return 'Routing number is required';
+    if (!/^\d+$/.test(value)) return 'Routing number must contain only digits';
+    // US routing numbers must be exactly 9 digits
+    if (country === 'US' && value.length !== 9) return 'US routing number must be exactly 9 digits';
+    // For other countries, allow 5-15 digits
+    if (country !== 'US' && (value.length < 5 || value.length > 15)) return 'Routing number must be 5-15 digits';
+    return null;
+  };
+
+  // Get error for each field
+  const bankNameError = validateBankName(bankName);
+  const accountHolderNameError = validateAccountHolderName(accountHolderName);
+  const accountNumberError = validateAccountNumber(accountNumber);
+  const confirmAccountNumberError = validateConfirmAccountNumber(confirmAccountNumber, accountNumber);
+  const bankCountryError = validateBankCountry(bankCountry);
+  const routingNumberError = validateRoutingNumber(routingNumber, bankCountry);
+
+  // Check if form is valid
+  const isFormValid = (): boolean => {
+    return (
+      !bankNameError &&
+      !accountHolderNameError &&
+      !accountNumberError &&
+      !confirmAccountNumberError &&
+      !bankCountryError &&
+      !routingNumberError
+    );
+  };
+
+  // Save banking info and continue
+  const handleContinue = async () => {
+    if (!bankName.trim()) {
+      setError('Please enter your bank name');
+      return;
+    }
+    if (!accountHolderName.trim()) {
+      setError('Please enter the account holder name');
+      return;
+    }
+    if (!accountNumber.trim()) {
+      setError('Please enter your account number');
+      return;
+    }
+    if (accountNumber !== confirmAccountNumber) {
+      setError('Account numbers do not match');
+      return;
+    }
+    if (!bankCountry) {
+      setError('Please select your bank country');
+      return;
+    }
+    if (!routingNumber.trim()) {
+      setError('Please enter the routing number');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     if (!config.supabaseClient) {
-      setSavingModal(false);
+      setError('Configuration error');
+      setLoading(false);
       return;
     }
 
     const { data: { user } } = await config.supabaseClient.auth.getUser();
     if (!user) {
-      setSavingModal(false);
+      setError('Not authenticated');
+      setLoading(false);
       return;
     }
+
+    const encryptedAccountNumber = btoa(accountNumber);
 
     const { error: upsertError } = await config.supabaseClient
       .from('onboarding_data')
       .upsert({
         user_id: user.id,
-        class_a_units: localShareUnits.class_a_units,
-        class_b_units: localShareUnits.class_b_units,
-        class_c_units: localShareUnits.class_c_units,
-        initial_investment_amount: modalTotalInvestment,
+        bank_name: bankName.trim(),
+        bank_account_holder_name: accountHolderName.trim(),
+        bank_account_number_encrypted: encryptedAccountNumber,
+        bank_routing_number: routingNumber.trim(),
+        bank_address_city: bankCity.trim() || null,
+        bank_address_country: bankCountry,
+        bank_account_type: accountType,
+        banking_info_skipped: false,
+        banking_info_submitted_at: new Date().toISOString(),
+        current_step: 13,
+        is_completed: true,
+        completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id'
       });
 
-    if (!upsertError) {
-      setShareUnits({ ...localShareUnits });
-      setIsModalOpen(false);
-    }
-    
-    setSavingModal(false);
-  };
-
-  // Get units for modal display
-  const getModalUnits = (classId: string): number => {
-    if (classId === 'class_a') return localShareUnits.class_a_units;
-    if (classId === 'class_b') return localShareUnits.class_b_units;
-    if (classId === 'class_c') return localShareUnits.class_c_units;
-    return 0;
-  };
-
-  const handleContinue = async () => {
-    if (totalInvestment < 1000000) {
-      setError('Minimum investment is $1 million');
+    if (upsertError) {
+      setError('Failed to save banking information');
+      setLoading(false);
       return;
     }
 
+    navigate('/onboarding/meet-ceo');
+  };
+
+  // Skip and continue later
+  const handleSkip = async () => {
     setLoading(true);
     setError(null);
 
@@ -295,8 +399,10 @@ function OnboardingStep13() {
       .from('onboarding_data')
       .upsert({
         user_id: user.id,
-        initial_investment_amount: totalInvestment,
+        banking_info_skipped: true,
         current_step: 13,
+        is_completed: true,
+        completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id'
@@ -308,31 +414,11 @@ function OnboardingStep13() {
       return;
     }
 
-    navigate('/onboarding/step-14');
+    navigate('/onboarding/meet-ceo');
   };
-
-  // Get units for a class
-  const getUnits = (classId: string): number => {
-    if (classId === 'class_a') return shareUnits.class_a_units;
-    if (classId === 'class_b') return shareUnits.class_b_units;
-    if (classId === 'class_c') return shareUnits.class_c_units;
-    return 0;
-  };
-
-  const hasAnyUnits = shareUnits.class_a_units > 0 || shareUnits.class_b_units > 0 || shareUnits.class_c_units > 0;
-  const isFormValid = hasAnyUnits && totalInvestment >= 1000000;
 
   const handleBack = () => {
-    navigate('/onboarding/step-12');
-  };
-
-  // Generate units summary text
-  const getUnitsSummary = () => {
-    const parts = [];
-    if (shareUnits.class_a_units > 0) parts.push(`${shareUnits.class_a_units} Class A`);
-    if (shareUnits.class_b_units > 0) parts.push(`${shareUnits.class_b_units} Class B`);
-    if (shareUnits.class_c_units > 0) parts.push(`${shareUnits.class_c_units} Class C`);
-    return parts.join(' + ') + ' units';
+    navigate('/onboarding/verify');
   };
 
   return (
@@ -357,11 +443,16 @@ function OnboardingStep13() {
         <main className="flex-1 overflow-y-auto pb-64">
           {/* Header Section - 22px title, 14px subtitle, center aligned */}
           <div className="px-5 pt-2 pb-6 flex flex-col items-center text-center">
+            {/* Bank Icon */}
+            <div className="mb-4 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#2b8cee]/10">
+              <BankIcon />
+            </div>
+            
             <h1 className="text-slate-900 text-[22px] font-extrabold leading-tight tracking-tight mb-2">
-              Your Investment Summary
+              Wire Transfer Details
             </h1>
             <p className="text-slate-500 text-sm font-bold">
-              Review your share class allocation below
+              Provide your banking information for investment transfers
             </p>
           </div>
 
@@ -372,315 +463,317 @@ function OnboardingStep13() {
             </div>
           )}
 
-          {/* Section Title */}
-          <div className="px-5 mb-3">
-            <h2 className="text-lg font-bold text-slate-900">Share Class Units</h2>
-          </div>
-
-          {/* Share Class Cards */}
-          <div className="flex flex-col gap-4 px-5">
-            {SHARE_CLASSES.map((shareClass) => {
-              const units = getUnits(shareClass.id);
-              const subtotal = units * shareClass.unitPrice;
-              const hasUnits = units > 0;
-
-              return (
-                <div
-                  key={shareClass.id}
-                  className={`flex flex-col rounded-xl border p-4 shadow-sm relative overflow-hidden ${
-                    hasUnits 
-                      ? 'bg-white border-slate-200' 
-                      : 'bg-slate-50 border-slate-200 opacity-70'
-                  }`}
-                >
-                  {/* Colored left border - always show for active, or gray for inactive */}
-                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-                    hasUnits ? shareClass.borderGradient : 'bg-slate-200'
-                  }`} />
-                  
-                  <div className="pl-3">
-                    {/* Header row */}
-                    <div className="flex justify-between items-center">
-                      <h3 className={`text-lg font-bold ${hasUnits ? 'text-slate-900' : 'text-slate-400'}`}>
-                        {shareClass.name}
-                      </h3>
-                      <span className={`px-2 py-1 text-xs font-bold rounded border ${
-                        hasUnits 
-                          ? 'bg-green-50 text-green-700 border-green-100' 
-                          : 'bg-slate-100 text-slate-400 border-slate-200'
-                      }`}>
-                        {hasUnits ? 'active' : 'disabled'}
-                      </span>
-                    </div>
-                    
-                    {/* Price and units row */}
-                    <div className={`flex justify-between items-center text-sm mt-2 ${hasUnits ? 'text-slate-500' : 'text-slate-400'}`}>
-                      <span>{formatCurrency(shareClass.unitPrice)}/unit</span>
-                      <span>units {units}</span>
-                    </div>
-                    
-                    {/* Subtotal (only if has units) */}
-                    {hasUnits && (
-                      <div className="pt-2 border-t border-slate-100 mt-2">
-                        <p className="text-slate-900 font-bold">
-                          Subtotal: {formatCurrency(subtotal)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Edit link - now opens modal */}
-            <div className="mt-2">
-              <button
-                onClick={handleOpenModal}
-                className="inline-flex items-center gap-2 text-[#2b8cee] hover:text-blue-600 transition-colors font-bold text-sm"
-              >
-                <EditIcon />
-                <span>Edit share class selection</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Total Investment Card */}
-          <div className="px-5 mt-8 mb-6">
-            <div className="relative bg-[#2b8cee]/5 rounded-xl p-6 border-2 border-[#2b8cee]/20 flex flex-col items-center justify-center gap-2 text-center">
-              {/* Wallet icon in corner */}
-              <div className="absolute top-3 right-3">
-                <WalletIcon />
-              </div>
-              
-              <span className="text-sm font-semibold uppercase tracking-widest text-slate-500">
-                Total Investment
-              </span>
-              <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                {hasAnyUnits ? formatFullCurrency(totalInvestment) : '$0'}
-              </span>
-              
-              {/* Blue divider */}
-              <div className="h-1 w-16 bg-[#2b8cee] rounded-full mt-2 mb-2" />
-              
-              {hasAnyUnits && (
-                <span className="text-sm font-medium text-slate-500">
-                  {getUnitsSummary()}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Info Card */}
-          <div className="px-5 mb-8">
-            <div className="bg-slate-50 rounded-lg p-4 flex gap-3 items-start border border-slate-100">
-              <span className="text-slate-500 shrink-0 mt-0.5">
-                <InfoIcon />
-              </span>
-              <p className="text-sm text-slate-500 leading-normal">
-                We are currently accepting investments of $1 million or greater for Hushh Fund A.
-              </p>
-            </div>
-          </div>
-        </main>
-
-        {/* Fixed Footer - matching template exactly */}
-        {!isFooterVisible && (
-          <div className="fixed bottom-0 left-0 right-0 w-full max-w-[500px] mx-auto bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50" data-onboarding-footer>
-            <div className="p-5 pb-8 flex flex-col gap-4">
-              {/* Total Investment Row */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                  TOTAL INVESTMENT
-                </span>
-                <span className="text-xl font-extrabold text-slate-900">
-                  {formatCurrency(totalInvestment)}
-                </span>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex flex-col gap-3">
-                {/* Continue Button - rounded-lg with arrow */}
-                <button
-                  onClick={handleContinue}
-                  disabled={!isFormValid || loading}
-                  className={`w-full bg-[#2b8cee] hover:bg-blue-600 text-white font-bold text-base py-4 rounded-lg shadow-lg shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
-                    !isFormValid || loading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {loading ? 'Saving...' : 'Continue'}
-                  {!loading && <ArrowForwardIcon />}
-                </button>
-
-                {/* Back Link */}
-                <button
-                  onClick={handleBack}
-                  className="w-full text-center text-slate-500 hover:text-slate-900 text-sm font-semibold py-2 transition-colors"
-                >
-                  Back
-                </button>
-              </div>
-
-              {/* Footer Note */}
-              <div className="text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
-                  Minimum investment per unit • Units can be adjusted later
+          {/* Investment Amount Card */}
+          {hasAnyUnits && (
+            <div className="mx-5 mb-6">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-1">
+                  INVESTMENT AMOUNT
                 </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Share Class Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/50">
-            <div 
-              className="relative w-full max-w-[500px] bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-hidden flex flex-col"
-              style={{ fontFamily: "'Manrope', sans-serif" }}
-            >
-              {/* Modal Header */}
-              <header className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 bg-white sticky top-0 z-10">
-                <button 
-                  onClick={handleCloseModal}
-                  aria-label="Close modal"
-                  className="flex size-10 shrink-0 items-center justify-center text-slate-500 rounded-full hover:bg-slate-50 transition-colors"
-                >
-                  <CloseIcon />
-                </button>
-                <h2 className="text-lg font-bold text-slate-900">Edit Share Class Units</h2>
-                <div className="w-10" /> {/* Spacer for centering */}
-              </header>
-
-              {/* Modal Content */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 pb-48">
-                {/* Share Class Cards */}
-                <div className="flex flex-col gap-4">
+                <div className="text-3xl font-bold text-slate-900 mb-4">
+                  {formatCurrency(totalInvestment)}
+                </div>
+                
+                {/* Share Class Pills */}
+                <div className="flex flex-wrap gap-2">
                   {SHARE_CLASSES.map((shareClass) => {
-                    const units = getModalUnits(shareClass.id);
-
+                    const units = getUnits(shareClass.id);
+                    if (units === 0) return null;
+                    
                     return (
                       <div
                         key={shareClass.id}
-                        className="flex flex-col rounded-xl border border-slate-200 p-4 shadow-sm relative overflow-hidden bg-white"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                        style={{
+                          backgroundColor: shareClass.bgColor,
+                          border: `1px solid ${shareClass.borderColor}`,
+                        }}
                       >
-                        {/* Colored left border */}
-                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${shareClass.borderGradient}`} />
-                        
-                        <div className="pl-3">
-                          {/* Header row with name and badge */}
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-slate-900">
-                              {shareClass.name}
-                            </h3>
-                            {shareClass.badge && (
-                              <span className={`px-2 py-1 text-[10px] font-bold rounded ${
-                                shareClass.tier === 'platinum' 
-                                  ? 'bg-gradient-to-r from-gray-200 to-gray-100 text-gray-600 border border-gray-200' 
-                                  : 'bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-700 border border-yellow-200'
-                              }`}>
-                                {shareClass.badge}
-                              </span>
-                            )}
-                          </div>
-                          
-                          {/* Price per unit */}
-                          <p className="text-sm text-slate-500 mt-1">
-                            {formatCurrency(shareClass.unitPrice)}/unit
-                          </p>
-                          
-                          {/* Unit controls */}
-                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-                            <span className="text-sm font-medium text-slate-500">Allocation</span>
-                            <div className="flex items-center gap-3">
-                              {/* Decrement button */}
-                              <button
-                                onClick={() => handleDecrement(shareClass.id)}
-                                disabled={units === 0}
-                                className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all ${
-                                  units === 0 
-                                    ? 'border-slate-200 text-slate-300 cursor-not-allowed' 
-                                    : 'border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-slate-400 active:scale-95'
-                                }`}
-                                aria-label="Decrease units"
-                              >
-                                <RemoveIcon />
-                              </button>
-                              
-                              {/* Unit count */}
-                              <span className="text-xl font-bold text-slate-900 min-w-[40px] text-center">
-                                {units}
-                              </span>
-                              
-                              {/* Increment button */}
-                              <button
-                                onClick={() => handleIncrement(shareClass.id)}
-                                className="flex items-center justify-center w-9 h-9 rounded-full border border-[#2b8cee] text-[#2b8cee] hover:bg-blue-50 active:scale-95 transition-all"
-                                aria-label="Increase units"
-                              >
-                                <AddIcon />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
+                        {shareClass.icon}
+                        <span 
+                          className="text-xs font-bold"
+                          style={{ color: shareClass.color }}
+                        >
+                          {shareClass.name} ×{units}
+                        </span>
                       </div>
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          )}
 
-                {/* Total Investment Card */}
-                <div className="mt-6">
-                  <div className="bg-[#2b8cee]/5 rounded-xl p-5 border-2 border-[#2b8cee]/20 flex flex-col items-center justify-center gap-1 text-center">
-                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-                      Total Investment
-                    </span>
-                    <span className="text-2xl font-extrabold text-slate-900">
-                      {formatFullCurrency(modalTotalInvestment)}
-                    </span>
-                  </div>
+          {/* Form Fields */}
+          <div className="px-5 space-y-5">
+            {/* Bank Name */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-900">Bank Name*</label>
+              <input
+                type="text"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                onBlur={() => handleBlur('bankName')}
+                placeholder="e.g. Chase Bank"
+                className={`w-full rounded-xl border bg-white px-4 py-3.5 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all ${
+                  touched.bankName && bankNameError
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                    : touched.bankName && !bankNameError
+                    ? 'border-green-400 focus:border-green-500 focus:ring-green-500'
+                    : 'border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]'
+                }`}
+              />
+              {touched.bankName && bankNameError && (
+                <p className="text-red-500 text-xs font-medium">{bankNameError}</p>
+              )}
+              {touched.bankName && !bankNameError && bankName && (
+                <p className="text-green-600 text-xs font-medium">✓ Valid bank name</p>
+              )}
+            </div>
+
+            {/* Account Holder Name */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-900">Account Holder Name*</label>
+              <input
+                type="text"
+                value={accountHolderName}
+                onChange={(e) => setAccountHolderName(e.target.value)}
+                onBlur={() => handleBlur('accountHolderName')}
+                placeholder="e.g. John Doe"
+                className={`w-full rounded-xl border bg-white px-4 py-3.5 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all ${
+                  touched.accountHolderName && accountHolderNameError
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                    : touched.accountHolderName && !accountHolderNameError
+                    ? 'border-green-400 focus:border-green-500 focus:ring-green-500'
+                    : 'border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]'
+                }`}
+              />
+              {touched.accountHolderName && accountHolderNameError && (
+                <p className="text-red-500 text-xs font-medium">{accountHolderNameError}</p>
+              )}
+              {touched.accountHolderName && !accountHolderNameError && accountHolderName && (
+                <p className="text-green-600 text-xs font-medium">✓ Valid name</p>
+              )}
+            </div>
+
+            {/* Account Type */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-900">Account Type*</label>
+              <div className="flex rounded-xl bg-slate-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => setAccountType('checking')}
+                  className={`flex-1 rounded-lg py-2.5 text-sm font-bold transition-all ${
+                    accountType === 'checking'
+                      ? 'bg-white text-[#2b8cee] shadow-sm border border-slate-100'
+                      : 'bg-transparent text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  Checking
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountType('savings')}
+                  className={`flex-1 rounded-lg py-2.5 text-sm font-bold transition-all ${
+                    accountType === 'savings'
+                      ? 'bg-white text-[#2b8cee] shadow-sm border border-slate-100'
+                      : 'bg-transparent text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  Savings
+                </button>
+              </div>
+            </div>
+
+            {/* Account Number */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-900">Account Number*</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                onBlur={() => handleBlur('accountNumber')}
+                placeholder="000000000"
+                className={`w-full rounded-xl border bg-white px-4 py-3.5 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all ${
+                  touched.accountNumber && accountNumberError
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                    : touched.accountNumber && !accountNumberError
+                    ? 'border-green-400 focus:border-green-500 focus:ring-green-500'
+                    : 'border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]'
+                }`}
+              />
+              {touched.accountNumber && accountNumberError && (
+                <p className="text-red-500 text-xs font-medium">{accountNumberError}</p>
+              )}
+              {touched.accountNumber && !accountNumberError && accountNumber && (
+                <p className="text-green-600 text-xs font-medium">✓ Valid account number ({accountNumber.length} digits)</p>
+              )}
+            </div>
+
+            {/* Confirm Account Number */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-900">Confirm Account Number*</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={confirmAccountNumber}
+                onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))}
+                onBlur={() => handleBlur('confirmAccountNumber')}
+                placeholder="000000000"
+                className={`w-full rounded-xl border bg-white px-4 py-3.5 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all ${
+                  touched.confirmAccountNumber && confirmAccountNumberError
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                    : touched.confirmAccountNumber && !confirmAccountNumberError
+                    ? 'border-green-400 focus:border-green-500 focus:ring-green-500'
+                    : 'border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]'
+                }`}
+              />
+              {touched.confirmAccountNumber && confirmAccountNumberError && (
+                <p className="text-red-500 text-xs font-medium">{confirmAccountNumberError}</p>
+              )}
+              {touched.confirmAccountNumber && !confirmAccountNumberError && confirmAccountNumber && (
+                <p className="text-green-600 text-xs font-medium">✓ Account numbers match</p>
+              )}
+            </div>
+
+            {/* Bank Country */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-900">Bank Country*</label>
+              <div className="relative">
+                <select
+                  value={bankCountry}
+                  onChange={(e) => {
+                    setBankCountry(e.target.value);
+                    handleBlur('bankCountry');
+                  }}
+                  onBlur={() => handleBlur('bankCountry')}
+                  className={`w-full appearance-none rounded-xl border bg-white px-4 py-3.5 text-base font-medium text-slate-900 focus:outline-none focus:ring-1 transition-all ${
+                    touched.bankCountry && bankCountryError
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                      : touched.bankCountry && !bankCountryError
+                      ? 'border-green-400 focus:border-green-500 focus:ring-green-500'
+                      : 'border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]'
+                  }`}
+                >
+                  {COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.code} disabled={country.code === ''}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                  <ChevronDownIcon />
                 </div>
               </div>
+              {touched.bankCountry && bankCountryError && (
+                <p className="text-red-500 text-xs font-medium">{bankCountryError}</p>
+              )}
+              {touched.bankCountry && !bankCountryError && bankCountry && (
+                <p className="text-green-600 text-xs font-medium">✓ Country selected</p>
+              )}
+            </div>
 
-              {/* Modal Footer */}
-              <div className="fixed bottom-0 left-0 right-0 w-full max-w-[500px] mx-auto bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-50">
-                <div className="p-5 pb-8 flex flex-col gap-3">
-                  {/* Save Changes Button */}
-                  <button
-                    onClick={handleSaveChanges}
-                    disabled={!hasModalChanges || savingModal}
-                    className={`w-full bg-[#2b8cee] hover:bg-blue-600 text-white font-bold text-base py-4 rounded-lg shadow-lg shadow-blue-500/30 active:scale-[0.98] transition-all ${
-                      !hasModalChanges || savingModal ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    {savingModal ? 'Saving...' : 'Save Changes'}
-                  </button>
+            {/* Routing Number */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-900">Routing Number (ABA)*</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={routingNumber}
+                onChange={(e) => setRoutingNumber(e.target.value.replace(/\D/g, '').slice(0, bankCountry === 'US' ? 9 : 15))}
+                onBlur={() => handleBlur('routingNumber')}
+                placeholder={bankCountry === 'US' ? '000000000' : 'Enter routing number'}
+                maxLength={bankCountry === 'US' ? 9 : 15}
+                className={`w-full rounded-xl border bg-white px-4 py-3.5 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all ${
+                  touched.routingNumber && routingNumberError
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                    : touched.routingNumber && !routingNumberError
+                    ? 'border-green-400 focus:border-green-500 focus:ring-green-500'
+                    : 'border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]'
+                }`}
+              />
+              {touched.routingNumber && routingNumberError && (
+                <p className="text-red-500 text-xs font-medium">{routingNumberError}</p>
+              )}
+              {touched.routingNumber && !routingNumberError && routingNumber && (
+                <p className="text-green-600 text-xs font-medium">✓ Valid routing number ({routingNumber.length} digits)</p>
+              )}
+              {!touched.routingNumber && (
+                <p className="text-xs font-medium text-slate-500 pt-1 pl-1">
+                  {bankCountry === 'US' ? 'Must be exactly 9 digits (bottom left of your check)' : 'Usually 5-15 digits'}
+                </p>
+              )}
+            </div>
 
-                  {/* Cancel Button */}
-                  <button
-                    onClick={handleCloseModal}
-                    className="w-full text-center text-slate-500 hover:text-slate-900 text-sm font-semibold py-2 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
+            {/* Bank City (Optional) */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-900">
+                Bank City <span className="text-slate-400 font-medium">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                value={bankCity}
+                onChange={(e) => setBankCity(e.target.value)}
+                placeholder="e.g. New York"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:border-[#2b8cee] focus:outline-none focus:ring-1 focus:ring-[#2b8cee] transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Security Note */}
+          <div className="mx-5 mt-6 mb-8">
+            <div className="flex gap-4 rounded-xl bg-[#F0F7FF] p-4 border border-[#2b8cee]/20">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2b8cee]/10">
+                <LockIcon />
               </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">Bank-level Security</h3>
+                <p className="text-xs leading-relaxed text-slate-500">
+                  Your data is encrypted with 256-bit SSL security and sent securely to your bank.
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Fixed Footer - matching Step3 pattern */}
+        {!isFooterVisible && (
+          <div className="fixed bottom-0 left-0 right-0 w-full max-w-[500px] mx-auto bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50" data-onboarding-footer>
+            <div className="p-5 pb-8 flex flex-col gap-3">
+              {/* Continue Button */}
+              <button
+                onClick={handleContinue}
+                disabled={loading || !isFormValid()}
+                className={`w-full bg-[#2b8cee] hover:bg-blue-600 text-white font-bold text-base py-4 rounded-full shadow-lg shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
+                  loading || !isFormValid() ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {loading ? 'Saving...' : 'Continue'}
+                {!loading && <ArrowForwardIcon />}
+              </button>
+
+              {/* Skip Button */}
+              <button
+                onClick={handleSkip}
+                disabled={loading}
+                className="w-full text-center text-slate-500 hover:text-slate-900 text-sm font-semibold py-2 transition-colors"
+              >
+                I'll do this later
+              </button>
+
+              {/* Back Button */}
+              <button
+                onClick={handleBack}
+                disabled={loading}
+                className="w-full text-center text-slate-400 hover:text-slate-900 text-sm font-semibold py-2 transition-colors"
+              >
+                Back
+              </button>
             </div>
           </div>
         )}
       </div>
-
-      {/* Animation keyframes */}
-      <style>{`
-        @keyframes slide-up {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

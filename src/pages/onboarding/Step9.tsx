@@ -1,25 +1,99 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
-// Back arrow icon
+// Back arrow icon (same as Step3)
 const BackIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6" />
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7" />
   </svg>
 );
 
-export default function OnboardingStep9() {
+// Lock icon
+const LockIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+// Calendar icon
+const CalendarIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+// Info icon
+const InfoIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="16" x2="12" y2="12" />
+    <line x1="12" y1="8" x2="12.01" y2="8" />
+  </svg>
+);
+
+// Chevron down icon
+const ChevronDownIcon = ({ className }: { className?: string }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polyline points="6,9 12,15 18,9" />
+  </svg>
+);
+
+function OnboardingStep9() {
   const navigate = useNavigate();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const isFooterVisible = useFooterVisibility();
+  const [ssn, setSsn] = useState('');
+  const [dob, setDob] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
+  
+  // Ref for native date picker
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  const formatIsoToDisplay = (iso?: string | null) => {
+    if (!iso) return '';
+    const parts = iso.split('-');
+    if (parts.length === 3) {
+      const [yyyy, mm, dd] = parts;
+      return `${mm}/${dd}/${yyyy}`;
+    }
+    return iso;
+  };
+
+  const parseDobToIso = (value: string) => {
+    if (!value) return null;
+
+    const parts = value.split('/');
+    if (parts.length === 3) {
+      let [p1, p2, year] = parts.map((p) => p.trim());
+      let month = p1;
+      let day = p2;
+
+      if (parseInt(p1, 10) > 12) {
+        day = p1;
+        month = p2;
+      }
+
+      const iso = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      if (!Number.isNaN(Date.parse(iso))) {
+        return iso;
+      }
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value))) {
+      return value;
+    }
+
+    return null;
+  };
 
   useEffect(() => {
-    // Scroll to top on component mount
     window.scrollTo(0, 0);
   }, []);
 
@@ -28,61 +102,103 @@ export default function OnboardingStep9() {
       if (!config.supabaseClient) return;
 
       const { data: { user } } = await config.supabaseClient.auth.getUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
+      if (!user) return;
 
-      // Extract name from OAuth provider metadata (Google, Apple, etc.)
-      const userMeta = user.user_metadata || {};
-      
-      // Try different name field patterns from various OAuth providers
-      // Google provides: given_name, family_name, full_name, name
-      // Apple provides: name (first_name, last_name), full_name
-      const oauthFirstName = userMeta.given_name || 
-                             userMeta.first_name || 
-                             (userMeta.full_name?.split(' ')[0]) || 
-                             (userMeta.name?.split(' ')[0]) || '';
-      const oauthLastName = userMeta.family_name || 
-                            userMeta.last_name || 
-                            (userMeta.full_name?.split(' ').slice(1).join(' ')) || 
-                            (userMeta.name?.split(' ').slice(1).join(' ')) || '';
-
-      // Check if user already has saved data in onboarding_data
+      // Fetch existing data
       const { data } = await config.supabaseClient
         .from('onboarding_data')
-        .select('legal_first_name, legal_last_name')
+        .select('ssn_encrypted, date_of_birth')
         .eq('user_id', user.id)
         .single();
 
-      // Priority: Database data > OAuth provider data
-      // This allows users to keep their edits if they go back and forth
-      setFirstName(data?.legal_first_name || oauthFirstName);
-      setLastName(data?.legal_last_name || oauthLastName);
+      // Restore saved DOB and SSN when user returns to this step
+      if (data?.date_of_birth) {
+        const savedDob = formatIsoToDisplay(data.date_of_birth);
+        if (savedDob) {
+          setDob(savedDob);
+          console.log('[Step11] ✅ Restored saved DOB:', savedDob);
+        }
+      }
+      if (data?.ssn_encrypted && data.ssn_encrypted !== '999-99-9999') {
+        setSsn(data.ssn_encrypted);
+        console.log('[Step11] ✅ Restored saved SSN');
+      }
     };
 
     loadData();
-  }, [navigate]);
+  }, []);
+
+  const formatSSN = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 3) return cleaned;
+    if (cleaned.length <= 5) return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
+    return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 5)}-${cleaned.slice(5, 9)}`;
+  };
+
+  const handleSSNChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatSSN(e.target.value);
+    setSsn(formatted);
+  };
+
+  const formatDate = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 2) return cleaned;
+    if (cleaned.length <= 4) return `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+    return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
+  };
+
+  const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatDate(e.target.value);
+    setDob(formatted);
+  };
+
+  // Handle native date picker selection
+  const handleNativeDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isoDate = e.target.value; // Format: YYYY-MM-DD
+    if (isoDate) {
+      const displayDate = formatIsoToDisplay(isoDate);
+      setDob(displayDate);
+    }
+  };
+
+  // Open native date picker when calendar icon is clicked
+  const openDatePicker = () => {
+    if (dateInputRef.current) {
+      dateInputRef.current.showPicker?.(); // Modern browsers
+      dateInputRef.current.click(); // Fallback
+    }
+  };
+
+  // SSN is OPTIONAL - user can continue with just DOB
+  const isFormValid = dob.length === 10;  // Only DOB is required
+  const canSkip = dob.length === 10;  // Can skip SSN if DOB is filled
 
   const handleContinue = async () => {
-    if (!firstName.trim() || !lastName.trim()) {
-      setError('Please enter both first and last name');
+    if (!isFormValid) {
+      setError('Please fill in all required fields');
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
 
     if (!config.supabaseClient) {
       setError('Configuration error');
-      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
     const { data: { user } } = await config.supabaseClient.auth.getUser();
     if (!user) {
       setError('Not authenticated');
-      setIsLoading(false);
+      setLoading(false);
+      return;
+    }
+
+    const isoDob = parseDobToIso(dob);
+    if (!isoDob) {
+      setError('Please enter a valid date in MM/DD/YYYY or DD/MM/YYYY format');
+      setLoading(false);
       return;
     }
 
@@ -90,8 +206,8 @@ export default function OnboardingStep9() {
       .from('onboarding_data')
       .upsert({
         user_id: user.id,
-        legal_first_name: firstName.trim(),
-        legal_last_name: lastName.trim(),
+        ssn_encrypted: ssn,
+        date_of_birth: isoDob,
         current_step: 9,
         updated_at: new Date().toISOString(),
       }, {
@@ -100,18 +216,66 @@ export default function OnboardingStep9() {
 
     if (upsertError) {
       setError('Failed to save data');
-      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
-    navigate('/onboarding/step-10');
+    navigate('/onboarding/step-8');
+  };
+
+  const handleSkip = async () => {
+    if (!canSkip) {
+      setError('Please enter your date of birth before skipping');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    if (!config.supabaseClient) {
+      setError('Configuration error');
+      setLoading(false);
+      return;
+    }
+
+    const { data: { user } } = await config.supabaseClient.auth.getUser();
+    if (!user) {
+      setError('Not authenticated');
+      setLoading(false);
+      return;
+    }
+
+    const isoDob = parseDobToIso(dob);
+    if (!isoDob) {
+      setError('Please enter a valid date in MM/DD/YYYY or DD/MM/YYYY format');
+      setLoading(false);
+      return;
+    }
+
+    const { error: upsertError } = await config.supabaseClient
+      .from('onboarding_data')
+      .upsert({
+        user_id: user.id,
+        ssn_encrypted: '999-99-9999',
+        date_of_birth: isoDob,
+        current_step: 9,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (upsertError) {
+      setError('Failed to save data');
+      setLoading(false);
+      return;
+    }
+
+    navigate('/onboarding/step-8');
   };
 
   const handleBack = () => {
     navigate('/onboarding/step-8');
   };
-
-  const isValid = firstName.trim() && lastName.trim();
 
   return (
     <div 
@@ -121,26 +285,25 @@ export default function OnboardingStep9() {
       <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
-        <header className="flex items-center px-4 pt-6 pb-4 bg-white/95 backdrop-blur-sm sticky top-0 z-10">
+        <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
           <button 
             onClick={handleBack}
-            className="flex items-center gap-1 text-slate-900 hover:text-[#2b8cee] transition-colors"
+            aria-label="Go back"
+            className="flex size-10 shrink-0 items-center justify-center text-slate-900 rounded-full hover:bg-slate-50 transition-colors"
           >
             <BackIcon />
-            <span className="text-base font-bold tracking-tight">Back</span>
           </button>
-          <div className="flex-1" />
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col px-6 pb-48">
-          {/* Header Section - Center Aligned */}
-          <div className="mb-8 text-center">
-            <h1 className="text-slate-900 text-[22px] font-bold leading-tight tracking-tight mb-3">
-              Enter your full legal name
+        <main className="flex-1 flex flex-col px-6 pb-44">
+          {/* Header Section - 22px title, 14px subtitle, center aligned */}
+          <div className="mb-8 mt-2 flex flex-col items-center text-center">
+            <h1 className="text-slate-900 text-[22px] font-extrabold leading-tight tracking-tight mb-2">
+              We just need a few more details
             </h1>
-            <p className="text-slate-500 text-[14px] font-normal leading-relaxed">
-              We are required to collect this info for verification.
+            <p className="text-slate-500 text-sm font-bold">
+              Federal law requires us to collect this info for tax reporting.
             </p>
           </div>
 
@@ -151,66 +314,125 @@ export default function OnboardingStep9() {
             </div>
           )}
 
-          {/* Form Fields */}
-          <div className="flex flex-col gap-6 w-full">
-            {/* First Name Field */}
-            <div className="flex flex-col gap-2">
-              <label className="text-slate-900 text-base font-medium leading-normal pl-1">
-                Legal first name
-              </label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="e.g. Jane"
-                className="w-full h-14 px-5 rounded-full border border-gray-200 bg-white text-slate-900 placeholder:text-slate-400 text-base font-normal focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
-              />
+          {/* SSN Card */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            <label className="flex flex-col w-full">
+              <p className="text-slate-900 text-sm font-semibold leading-normal pb-2">Social Security number</p>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={ssn}
+                  onChange={handleSSNChange}
+                  placeholder="000-00-0000"
+                  maxLength={11}
+                  inputMode="numeric"
+                  className="flex w-full rounded-lg text-slate-900 border border-slate-200 bg-white h-12 px-4 pr-10 text-base font-medium placeholder:text-slate-400 focus:outline-0 focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <LockIcon />
+                </span>
+              </div>
+            </label>
+            
+            {/* Accordion for SSN info */}
+            <div className="mt-4 border-t border-slate-100 pt-3">
+              <details 
+                className="group"
+                open={showInfo}
+                onToggle={(e) => setShowInfo((e.target as HTMLDetailsElement).open)}
+              >
+                <summary className="flex cursor-pointer items-center gap-2 py-1 text-[#2b8cee] hover:text-[#2b8cee]/80 transition-colors list-none select-none">
+                  <InfoIcon />
+                  <span className="text-sm font-bold">Why do we need your SSN?</span>
+                  <ChevronDownIcon className="ml-auto transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="pt-3 pb-1">
+                  <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                    We are required by federal law to collect this information to prevent fraud and verify your identity before opening an investment account.
+                  </p>
+                </div>
+              </details>
             </div>
+          </div>
 
-            {/* Last Name Field */}
-            <div className="flex flex-col gap-2">
-              <label className="text-slate-900 text-base font-medium leading-normal pl-1">
-                Legal last name
-              </label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="e.g. Doe"
-                className="w-full h-14 px-5 rounded-full border border-gray-200 bg-white text-slate-900 placeholder:text-slate-400 text-base font-normal focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
-              />
-            </div>
+          {/* DOB Card */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            <label className="flex flex-col w-full">
+              <p className="text-slate-900 text-sm font-semibold leading-normal pb-2">Date of birth</p>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={dob}
+                  onChange={handleDobChange}
+                  placeholder="MM/DD/YYYY"
+                  maxLength={10}
+                  inputMode="numeric"
+                  className="flex w-full rounded-lg text-slate-900 border border-slate-200 bg-white h-12 px-4 pr-10 text-base font-medium placeholder:text-slate-400 focus:outline-0 focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+                />
+                {/* Clickable Calendar Icon */}
+                <button 
+                  type="button"
+                  onClick={openDatePicker}
+                  aria-label="Open date picker"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:opacity-70 transition-opacity p-1"
+                >
+                  <CalendarIcon />
+                </button>
+                {/* Hidden native date input */}
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  onChange={handleNativeDateChange}
+                  className="sr-only"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  max={new Date().toISOString().split('T')[0]}
+                  min="1900-01-01"
+                />
+              </div>
+            </label>
           </div>
         </main>
 
-        {/* Fixed Footer - Hidden when main footer is visible */}
+        {/* Fixed Footer - Hidden when main footer is visible (matching Step3 exactly) */}
         {!isFooterVisible && (
-          <div className="fixed bottom-0 left-0 right-0 z-20 w-full max-w-[500px] mx-auto bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 flex flex-col gap-3" data-onboarding-footer>
-            {/* Continue Button */}
-            <button
-              onClick={handleContinue}
-              disabled={!isValid || isLoading}
-              className={`
-                flex w-full cursor-pointer items-center justify-center rounded-full h-14 px-5 text-base font-bold tracking-wide transition-all active:scale-[0.98]
-                ${isValid && !isLoading
-                  ? 'bg-[#2b8cee] hover:bg-[#2070c0] text-white shadow-lg shadow-[#2b8cee]/20'
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                }
-              `}
-            >
-              {isLoading ? 'Saving...' : 'Continue'}
-            </button>
-            
-            {/* Back Button */}
-            <button
-              onClick={handleBack}
-              className="flex w-full cursor-pointer items-center justify-center rounded-full bg-transparent py-2 text-slate-500 text-sm font-bold hover:text-slate-800 transition-colors"
-            >
-              Back
-            </button>
+          <div className="fixed bottom-0 left-0 right-0 z-20 w-full max-w-[500px] mx-auto bg-white border-t border-slate-100 p-6 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]" data-onboarding-footer>
+            {/* Buttons */}
+            <div className="flex flex-col gap-4">
+              {/* Continue Button */}
+              <button
+                onClick={handleContinue}
+                disabled={!isFormValid || loading}
+                className={`flex w-full cursor-pointer items-center justify-center rounded-full bg-[#2b8cee] py-4 text-white text-base font-bold transition-all hover:bg-blue-600 active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400 ${
+                  !isFormValid || loading ? 'disabled:cursor-not-allowed' : ''
+                }`}
+              >
+                {loading ? 'Saving...' : 'Continue'}
+              </button>
+
+              {/* Skip Button */}
+              <button
+                onClick={handleSkip}
+                disabled={!canSkip || loading}
+                className={`flex w-full cursor-pointer items-center justify-center rounded-full bg-transparent py-2 text-slate-500 text-sm font-bold hover:text-slate-800 transition-colors ${
+                  !canSkip || loading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                Skip for now
+              </button>
+            </div>
+
+            {/* Footer Note */}
+            <div className="mt-4 text-center">
+              <p className="text-[10px] text-slate-400 leading-tight">
+                Your information is encrypted and secure
+              </p>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
+
+export default OnboardingStep9;
