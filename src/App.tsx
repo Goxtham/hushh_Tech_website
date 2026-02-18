@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import Login from './pages/Login'
 import Contact from './pages/Contact';
 import ScrollToTop from './components/ScrollToTop';
+import OnboardingShellAutoPadding from './components/OnboardingShellAutoPadding';
 // FloatingContactBubble removed as requested
 import { ChakraProvider } from '@chakra-ui/react';
 import theme from './theme';
@@ -55,7 +56,6 @@ import OnboardingStep1 from './pages/onboarding/Step1';
 import OnboardingStep2 from './pages/onboarding/Step2';
 import OnboardingStep4 from './pages/onboarding/Step4';
 import OnboardingStep5 from './pages/onboarding/Step5';
-import OnboardingStep6 from './pages/onboarding/Step6';
 import OnboardingStep7 from './pages/onboarding/Step7';
 import OnboardingStep8 from './pages/onboarding/Step8';
 import OnboardingStep9 from './pages/onboarding/Step9';
@@ -120,9 +120,11 @@ const useLayoutVisibility = () => {
   const isOnboarding = location.pathname.startsWith('/onboarding');
 
   return {
-    showNavbar: !isHushhAI && !isHushhAgent && !isKai && !isStudio,
+    // Onboarding is an immersive flow with its own in-shell header/back UX.
+    // Hiding the global navbar avoids double headers and fixes mobile viewport sizing.
+    showNavbar: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding,
     showFooter: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding,
-    showMobileNav: !isHushhAI && !isHushhAgent && !isKai && !isStudio,
+    showMobileNav: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding,
   };
 };
 
@@ -266,7 +268,7 @@ function App() {
             } />
             <Route path="/onboarding/step-6" element={
               <ProtectedRoute>
-                <OnboardingStep6 />
+                <Navigate to="/onboarding/step-5" replace />
               </ProtectedRoute>
             } />
             <Route path="/onboarding/step-7" element={
@@ -438,6 +440,7 @@ function App() {
     <ChakraProvider theme={theme}>
       <Router>
         <ScrollToTop />
+        <OnboardingShellAutoPadding />
         <GlobalNDAGate session={session}>
           <AppLayout />
         </GlobalNDAGate>
