@@ -103,7 +103,11 @@ export default function OnboardingStep6() {
 
       // Cache the detected location for other steps (even if the dial code isn't in our short list).
       if (config.supabaseClient) {
-        await locationService.saveLocationToOnboarding(uid, locationData);
+        try {
+          await locationService.saveLocationToOnboarding(uid, locationData);
+        } catch (saveErr) {
+          console.warn('[Step6] Failed to cache location:', saveErr);
+        }
       }
 
       if (dialCodeExists) {
@@ -153,7 +157,8 @@ export default function OnboardingStep6() {
       // Load existing data
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('phone_number, phone_country_code, gps_detected_phone_dial_code')
+        // Select * to remain compatible across schema revisions (gps_detected_* columns may not exist).
+        .select('*')
         .eq('user_id', user.id)
         .single();
 
@@ -167,7 +172,7 @@ export default function OnboardingStep6() {
         }
       }
 
-      const cachedDialCode = onboardingData?.gps_detected_phone_dial_code || undefined;
+      const cachedDialCode = (onboardingData as any)?.gps_detected_phone_dial_code || undefined;
       if (cachedDialCode && countryCodes.some(c => c.code === cachedDialCode)) {
         // Pre-fill immediately from cache, then attempt fresh detection.
         setCountryCode(cachedDialCode);

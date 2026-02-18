@@ -470,7 +470,7 @@ function OnboardingStep12() {
                           style={{ backgroundColor: shareClass.color }}
                         />
                         <span className="text-xs font-semibold text-slate-900">
-                          {shareClass.name} Ã—{units}
+                          {shareClass.name} —{units}
                         </span>
                       </div>
                     );
