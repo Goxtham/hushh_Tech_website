@@ -18,6 +18,19 @@ const isRecurringFrequencyConstraintViolation = (err: unknown): err is Postgrest
   return e.code === '23514' && e.message.includes('onboarding_data_recurring_frequency_check');
 };
 
+const isSchemaCacheMissingColumnError = (err: unknown): err is PostgrestErrorLike => {
+  const e = err as PostgrestErrorLike | null;
+  if (!e || typeof e.message !== 'string') return false;
+  return e.code === 'PGRST204' && e.message.includes('schema cache') && e.message.includes("Could not find the '");
+};
+
+const tryParseMissingColumnName = (message: string): string | null => {
+  // Example:
+  // Could not find the 'banking_info_skipped' column of 'onboarding_data' in the schema cache
+  const match = message.match(/Could not find the '([^']+)' column/i);
+  return match?.[1] || null;
+};
+
 type RecurringFrequencyNew = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
 type RecurringFrequencyLegacy = 'monthly' | 'bimonthly' | 'weekly' | 'biweekly';
 
@@ -106,6 +119,65 @@ export const upsertOnboardingData = async (
   }
 
   try {
+    const updateWithMissingColumnRetry = async (
+      basePayload: Record<string, unknown>
+    ): Promise<PostgrestErrorLike | null> => {
+      const now = new Date().toISOString();
+      let currentPayload = { ...basePayload };
+
+      // Retry a few times, dropping one missing column per attempt when PostgREST complains.
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { error } = await config.supabaseClient
+          .from('onboarding_data')
+          .update({ ...currentPayload, updated_at: now })
+          .eq('user_id', userId);
+
+        if (!error) return null;
+
+        if (isSchemaCacheMissingColumnError(error)) {
+          const missing = tryParseMissingColumnName(error.message);
+          if (missing && Object.prototype.hasOwnProperty.call(currentPayload, missing)) {
+            console.warn('[upsertOnboardingData] Dropping missing column and retrying:', missing);
+            currentPayload = { ...currentPayload };
+            delete (currentPayload as Record<string, unknown>)[missing];
+            continue;
+          }
+        }
+
+        return error;
+      }
+
+      return { message: 'Too many retries saving onboarding data' };
+    };
+
+    const insertWithMissingColumnRetry = async (
+      basePayload: Record<string, unknown>
+    ): Promise<PostgrestErrorLike | null> => {
+      let currentPayload = { ...basePayload };
+
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { error } = await config.supabaseClient
+          .from('onboarding_data')
+          .insert({ user_id: userId, ...currentPayload });
+
+        if (!error) return null;
+
+        if (isSchemaCacheMissingColumnError(error)) {
+          const missing = tryParseMissingColumnName(error.message);
+          if (missing && Object.prototype.hasOwnProperty.call(currentPayload, missing)) {
+            console.warn('[upsertOnboardingData] Dropping missing column and retrying:', missing);
+            currentPayload = { ...currentPayload };
+            delete (currentPayload as Record<string, unknown>)[missing];
+            continue;
+          }
+        }
+
+        return error;
+      }
+
+      return { message: 'Too many retries saving onboarding data' };
+    };
+
     // 1. Check if row exists
     const { data: existing, error: selectError } = await config.supabaseClient
       .from('onboarding_data')
@@ -121,19 +193,13 @@ export const upsertOnboardingData = async (
     // 2. Update if exists, insert if not
     if (existing) {
       const updatePayload = normalizePayloadForDb(payload, 'new');
-      const { error: updateError } = await config.supabaseClient
-        .from('onboarding_data')
-        .update({ ...updatePayload, updated_at: new Date().toISOString() })
-        .eq('user_id', userId);
+      const updateError = await updateWithMissingColumnRetry(updatePayload);
 
       if (updateError) {
         // If the DB still expects legacy recurring_frequency values, retry once with legacy mapping.
         if (isRecurringFrequencyConstraintViolation(updateError)) {
           const retryPayload = normalizePayloadForDb(payload, 'legacy');
-          const { error: retryError } = await config.supabaseClient
-            .from('onboarding_data')
-            .update({ ...retryPayload, updated_at: new Date().toISOString() })
-            .eq('user_id', userId);
+          const retryError = await updateWithMissingColumnRetry(retryPayload);
 
           if (!retryError) {
             return { error: null };
@@ -148,16 +214,12 @@ export const upsertOnboardingData = async (
       }
     } else {
       const insertPayload = normalizePayloadForDb(payload, 'new');
-      const { error: insertError } = await config.supabaseClient
-        .from('onboarding_data')
-        .insert({ user_id: userId, ...insertPayload });
+      const insertError = await insertWithMissingColumnRetry(insertPayload);
 
       if (insertError) {
         if (isRecurringFrequencyConstraintViolation(insertError)) {
           const retryPayload = normalizePayloadForDb(payload, 'legacy');
-          const { error: retryError } = await config.supabaseClient
-            .from('onboarding_data')
-            .insert({ user_id: userId, ...retryPayload });
+          const retryError = await insertWithMissingColumnRetry(retryPayload);
 
           if (!retryError) {
             return { error: null };
