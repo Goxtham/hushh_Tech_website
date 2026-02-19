@@ -5,6 +5,7 @@ import { upsertOnboardingData } from '../../services/onboarding/upsertOnboarding
 import type { AccountStructure } from '../../types/onboarding';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { locationService } from '../../services/location';
+import { OnboardingStepProgress } from '../../components/onboarding/OnboardingStepProgress';
 
 // Back arrow icon
 const BackIcon = () => (
@@ -194,6 +195,8 @@ export default function OnboardingStep5() {
           </button>
         </header>
 
+        <OnboardingStepProgress currentStep={5} />
+
         {/* Main Content */}
         <main className="flex-1 flex flex-col px-4 sm:px-6 pb-40 sm:pb-44">
           {/* Header Section */}
@@ -333,3 +336,4 @@ export default function OnboardingStep5() {
     </div>
   );
 }
+
