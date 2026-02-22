@@ -11,9 +11,10 @@
  */
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Box, Text, Flex, Spinner } from "@chakra-ui/react";
+import { Box, Text, Flex, Spinner, Image } from "@chakra-ui/react";
 import config from "../resources/config/config";
 import { Session } from "@supabase/supabase-js";
+import HushhLogo from "./images/Hushhogo.png";
 
 /* ─── iOS Design Tokens ─── */
 const IOS = {
@@ -260,12 +261,19 @@ export default function Hero() {
       >
         {/* ═══ Section 1: Investment Intro ═══ */}
         <Flex flexDir="column" align="center" px={6} pt={4} pb={2} bg="white" borderBottomRadius="0">
-          {/* AI Icon */}
+          {/* Hushh Brand Logo */}
           <Flex
-            w="72px" h="72px" borderRadius="18px"
-            bg="rgba(0,122,255,0.06)" align="center" justify="center" mb={6}
+            w="72px" h="72px" borderRadius="full"
+            bg="white" align="center" justify="center" mb={6}
+            border="1px solid" borderColor="gray.100"
+            boxShadow="0 2px 12px rgba(0,0,0,0.06)"
           >
-            <PsychologyIcon />
+            <Image
+              src={HushhLogo}
+              alt="Hushh brand logo"
+              w="48px" h="48px"
+              objectFit="contain"
+            />
           </Flex>
 
           {/* Title */}
