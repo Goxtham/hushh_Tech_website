@@ -226,10 +226,11 @@ export default function OnboardingStep4() {
           className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}
         >
-          <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2" aria-label="Go back">
-            <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>
+          <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">
+            <span className="material-symbols-outlined text-3xl -mr-1" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>
               chevron_left
             </span>
+            <span className="text-[17px] leading-none pb-[2px]">Back</span>
           </button>
           <h1 className="text-[17px] font-semibold text-black absolute left-1/2 transform -translate-x-1/2">
             Verification
@@ -251,10 +252,10 @@ export default function OnboardingStep4() {
           </div>
 
           {/* ─── Title ─── */}
-          <h1 className="text-[28px] leading-[34px] font-bold text-black mb-2 tracking-tight">
+          <h1 className="text-[34px] leading-[41px] font-bold text-black mb-2 tracking-tight">
             Confirm your residence
           </h1>
-          <p className="text-[15px] text-[#3C3C4399] mb-8 leading-snug">
+          <p className="text-[17px] text-[#8E8E93] mb-8 leading-snug">
             We need to know where you live and pay taxes to open your investment account.
           </p>
 
@@ -267,9 +268,11 @@ export default function OnboardingStep4() {
           )}
 
           {isSuccessStatus && (
-            <div className="flex items-center gap-3 p-3 mb-4 bg-green-50 rounded-xl border border-green-100">
-              <span className="material-symbols-outlined text-green-600 text-xl" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>check_circle</span>
-              <p className="text-sm text-black">
+            <div className="flex items-start gap-3 p-4 mb-8 bg-green-50 rounded-xl">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white">
+                <span className="material-symbols-outlined text-sm font-bold" style={{ fontVariationSettings: "'FILL' 1, 'wght' 700", fontSize: '14px' }}>check</span>
+              </div>
+              <p className="text-[15px] leading-snug text-black">
                 <span className="font-semibold">Location detected:</span> {detectedLocation}
               </p>
             </div>
@@ -297,73 +300,61 @@ export default function OnboardingStep4() {
             </div>
           )}
 
-          {/* ─── Country Selection Form ─── */}
+          {/* ─── Country Selection — iOS Separated Rows ─── */}
           {shouldShowForm && (
-            <div className="bg-white rounded-xl overflow-hidden shadow-sm mb-6">
+            <div className="space-y-8">
               {/* Citizenship */}
-              <div className="p-4 border-b border-[#C6C6C8]/30">
-                <label className="text-[13px] font-medium text-[#3C3C4399] uppercase tracking-wide mb-2 block">
+              <div className="space-y-2">
+                <span className="px-4 text-[13px] uppercase text-[#8E8E93] font-normal">
                   Country of Citizenship
-                </label>
-                <div className="relative">
-                  <select
-                    value={citizenshipCountry}
-                    onChange={(e) => handleCitizenshipChange(e.target.value)}
-                    disabled={isDetectingLocation}
-                    className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2.5 px-3 pr-8 text-[17px] text-black focus:outline-none focus:ring-1 focus:ring-[#007AFF] focus:border-[#007AFF] disabled:opacity-50"
-                  >
-                    <option disabled value="">Select country</option>
-                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#3C3C4399]">
-                    <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>expand_more</span>
-                  </div>
+                </span>
+                <div className="bg-white rounded-xl overflow-hidden border border-[#C6C6C8]/50">
+                  <label className="flex items-center justify-between pl-4 pr-3 py-3 cursor-pointer active:bg-gray-100 transition-colors relative">
+                    <span className="text-[17px] text-black">{citizenshipCountry || 'Select country'}</span>
+                    <span className="material-symbols-outlined text-gray-400" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>chevron_right</span>
+                    <select
+                      value={citizenshipCountry}
+                      onChange={(e) => handleCitizenshipChange(e.target.value)}
+                      disabled={isDetectingLocation}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    >
+                      <option disabled value="">Select country</option>
+                      {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </label>
                 </div>
               </div>
 
               {/* Residence */}
-              <div className="p-4">
-                <label className="text-[13px] font-medium text-[#3C3C4399] uppercase tracking-wide mb-2 block">
+              <div className="space-y-2">
+                <span className="px-4 text-[13px] uppercase text-[#8E8E93] font-normal">
                   Country of Residence
-                </label>
-                <div className="relative">
-                  <select
-                    value={residenceCountry}
-                    onChange={(e) => handleResidenceChange(e.target.value)}
-                    disabled={isDetectingLocation}
-                    className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2.5 px-3 pr-8 text-[17px] text-black focus:outline-none focus:ring-1 focus:ring-[#007AFF] focus:border-[#007AFF] disabled:opacity-50"
-                  >
-                    <option disabled value="">Select country</option>
-                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#3C3C4399]">
-                    <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>expand_more</span>
-                  </div>
+                </span>
+                <div className="bg-white rounded-xl overflow-hidden border border-[#C6C6C8]/50">
+                  <label className="flex items-center justify-between pl-4 pr-3 py-3 cursor-pointer active:bg-gray-100 transition-colors relative">
+                    <span className="text-[17px] text-black">{residenceCountry || 'Select country'}</span>
+                    <span className="material-symbols-outlined text-gray-400" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>chevron_right</span>
+                    <select
+                      value={residenceCountry}
+                      onChange={(e) => handleResidenceChange(e.target.value)}
+                      disabled={isDetectingLocation}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    >
+                      <option disabled value="">Select country</option>
+                      {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </label>
                 </div>
               </div>
 
-              {/* Confirm manual selection */}
-              {!locationDetected && (
-                <div className="px-4 pb-4 pt-1 border-t border-[#C6C6C8]/20">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-[#3C3C4399]">
-                      {userConfirmedManual ? 'Selection confirmed' : 'Ready to proceed?'}
-                    </p>
-                    <button
-                      onClick={handleConfirmManualSelection}
-                      disabled={!canConfirmSelection}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                        userConfirmedManual
-                          ? 'bg-green-100 text-green-700'
-                          : canConfirmSelection
-                            ? 'bg-[#007AFF] text-white active:scale-[0.98]'
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      {userConfirmedManual ? '✓ Confirmed' : 'Confirm'}
-                    </button>
-                  </div>
-                </div>
+              {/* Confirm manual selection (hidden button — auto-confirms on select) */}
+              {!locationDetected && canConfirmSelection && !userConfirmedManual && (
+                <button
+                  onClick={handleConfirmManualSelection}
+                  className="w-full py-2.5 rounded-xl bg-[#007AFF]/10 text-[#007AFF] font-semibold text-[15px] active:scale-[0.98] transition-all"
+                >
+                  Confirm Selection
+                </button>
               )}
             </div>
           )}
@@ -441,12 +432,20 @@ export default function OnboardingStep4() {
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
           data-onboarding-footer
         >
-          <div className="max-w-md mx-auto">
+          <div className="max-w-md mx-auto grid grid-cols-2 gap-4">
+            {/* Skip Button */}
+            <button
+              onClick={handleSkip}
+              className="h-[50px] w-full rounded-xl bg-[#F2F2F7] text-[#007AFF] font-semibold text-[17px] active:bg-gray-200 transition-colors flex items-center justify-center"
+            >
+              Skip
+            </button>
+            {/* Next Button */}
             <button
               onClick={handleContinue}
               disabled={!canContinue || isLoading || isDetectingLocation}
               data-onboarding-cta
-              className={`w-full font-semibold text-[17px] h-12 rounded-xl shadow-sm transition-all flex items-center justify-center ${
+              className={`h-[50px] w-full rounded-xl font-semibold text-[17px] shadow-sm transition-all flex items-center justify-center ${
                 canContinue && !isLoading && !isDetectingLocation
                   ? 'bg-[#007AFF] text-white active:opacity-90 active:scale-[0.98]'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -458,12 +457,6 @@ export default function OnboardingStep4() {
                   Detecting...
                 </>
               ) : isLoading ? 'Saving...' : 'Next'}
-            </button>
-            <button
-              onClick={handleSkip}
-              className="w-full mt-4 text-[#007AFF] font-medium text-[17px] h-12 flex items-center justify-center hover:opacity-70 transition-opacity"
-            >
-              Skip
             </button>
           </div>
         </div>
