@@ -1,7 +1,8 @@
 /**
  * Sign NDA Page
  * 
- * iOS-first design: white background, black text, system blue (#007AFF) accent.
+ * iOS 26 Liquid Glass design: frosted glass cards with backdrop-filter blur,
+ * semi-transparent surfaces, subtle light refraction borders.
  * Production-level auth lifecycle with active session monitoring.
  */
 
@@ -30,7 +31,7 @@ import { signNDA, sendNDANotification, generateNDAPdf, uploadSignedNDA } from '.
 
 const MotionBox = motion(Box);
 
-/* iOS system colors */
+/* iOS 26 Liquid Glass color palette */
 const COLORS = {
   primary: '#2F80ED',
   primaryHover: '#2570D3',
@@ -38,11 +39,17 @@ const COLORS = {
   textSecondary: '#3C3C43',
   textTertiary: '#8E8E93',
   separator: '#C6C6C8',
-  separatorLight: '#E5E5EA',
+  separatorLight: 'rgba(60, 60, 67, 0.08)',
   bg: '#FFFFFF',
   bgGrouped: '#F2F2F7',
   success: '#34C759',
   destructive: '#FF3B30',
+  /* Liquid Glass specific */
+  glassBg: 'rgba(255, 255, 255, 0.72)',
+  glassBorder: 'rgba(255, 255, 255, 0.35)',
+  glassHighlight: 'rgba(255, 255, 255, 0.5)',
+  glassShadow: '0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04)',
+  glassShadowHover: '0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05)',
 };
 
 const SignNDAPage: React.FC = () => {
@@ -81,12 +88,10 @@ const SignNDAPage: React.FC = () => {
       if (!isMountedRef.current) return;
 
       if (!session?.user) {
-        // No valid session — redirect to login
         navigate('/login', { replace: true });
         return;
       }
 
-      // Valid session — populate user info
       setUserId(session.user.id);
       setUserEmail(session.user.email || null);
 
@@ -131,7 +136,6 @@ const SignNDAPage: React.FC = () => {
     if (!validateForm()) return;
     if (isSubmitting) return;
 
-    // Re-validate session right before signing
     if (!config.supabaseClient || !userId) {
       toast({
         title: 'Session expired',
@@ -147,7 +151,6 @@ const SignNDAPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Re-fetch session to ensure token is fresh
       const { data: { session } } = await config.supabaseClient.auth.getSession();
       if (!session) {
         toast({
@@ -166,7 +169,7 @@ const SignNDAPage: React.FC = () => {
       let generatedPdfUrl: string | undefined;
       let pdfBlob: Blob | undefined;
 
-      // PDF generation — non-blocking, failure doesn't stop NDA signing
+      // PDF generation — non-blocking
       try {
         if (accessToken) {
           const pdfResult = await generateNDAPdf(
@@ -192,13 +195,11 @@ const SignNDAPage: React.FC = () => {
         console.warn('[SignNDA] PDF generation/upload failed, continuing:', pdfError);
       }
 
-      // Sign NDA via Supabase RPC
       const result = await signNDA(trimmedName, 'v1.0', generatedPdfUrl);
 
       if (!isMountedRef.current) return;
 
       if (result.success) {
-        // Send notification — fire and forget, don't block user
         sendNDANotification(
           trimmedName,
           userEmail || 'unknown@email.com',
@@ -257,21 +258,49 @@ const SignNDAPage: React.FC = () => {
   return (
     <Box
       minH="100dvh"
-      bg={COLORS.bg}
+      /* Subtle gradient mesh background — gives the glass something to refract */
+      bg="linear-gradient(160deg, #FFFFFF 0%, #F0F4FF 30%, #F2F2F7 50%, #EBF4FF 70%, #FFFFFF 100%)"
+      position="relative"
       sx={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif' }}
     >
-      {/* Header */}
+      {/* Subtle ambient light orbs — for glass refraction depth */}
       <Box
-        bg={COLORS.bg}
+        position="absolute"
+        top="-100px"
+        right="-60px"
+        w="280px"
+        h="280px"
+        borderRadius="full"
+        bg="radial-gradient(circle, rgba(47, 128, 237, 0.08) 0%, transparent 70%)"
+        pointerEvents="none"
+      />
+      <Box
+        position="absolute"
+        bottom="10%"
+        left="-80px"
+        w="240px"
+        h="240px"
+        borderRadius="full"
+        bg="radial-gradient(circle, rgba(52, 199, 89, 0.06) 0%, transparent 70%)"
+        pointerEvents="none"
+      />
+
+      {/* Header — Liquid Glass style */}
+      <Box
+        bg={COLORS.glassBg}
+        backdropFilter="blur(20px) saturate(180%)"
+        sx={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}
         pt={{ base: 6, md: 14 }}
         pb={{ base: 6, md: 10 }}
         px={4}
         borderBottom="0.5px solid"
-        borderColor={COLORS.separatorLight}
+        borderColor={COLORS.glassBorder}
+        position="relative"
+        zIndex={1}
       >
         <Container maxW="container.md">
           <VStack spacing={3} textAlign="center">
-            {/* Icon */}
+            {/* Icon — frosted glass container */}
             <Flex
               w="64px"
               h="64px"
@@ -279,6 +308,7 @@ const SignNDAPage: React.FC = () => {
               bg={COLORS.primary}
               align="center"
               justify="center"
+              boxShadow={`0 4px 16px rgba(47, 128, 237, 0.3), inset 0 1px 0 ${COLORS.glassHighlight}`}
             >
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -313,20 +343,25 @@ const SignNDAPage: React.FC = () => {
       </Box>
 
       {/* Content */}
-      <Container maxW="container.md" py={{ base: 5, md: 8 }} px={4}>
+      <Container maxW="container.md" py={{ base: 5, md: 8 }} px={4} position="relative" zIndex={1}>
         <MotionBox
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          {/* Security note */}
+          {/* Security note — Liquid Glass pill */}
           <HStack
             spacing={2}
-            bg={COLORS.bgGrouped}
+            bg="rgba(255, 255, 255, 0.6)"
+            backdropFilter="blur(16px) saturate(180%)"
+            sx={{ WebkitBackdropFilter: 'blur(16px) saturate(180%)' }}
+            border="1px solid"
+            borderColor={COLORS.glassBorder}
             px={4}
             py={3}
-            borderRadius="12px"
+            borderRadius="14px"
             mb={6}
+            boxShadow="0 2px 8px rgba(0, 0, 0, 0.04)"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={COLORS.textTertiary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -337,16 +372,34 @@ const SignNDAPage: React.FC = () => {
             </Text>
           </HStack>
 
-          {/* NDA Document Card */}
+          {/* NDA Document Card — Main Liquid Glass surface */}
           <Box
-            bg={COLORS.bg}
-            borderRadius="16px"
-            border="0.5px solid"
-            borderColor={COLORS.separatorLight}
+            bg={COLORS.glassBg}
+            backdropFilter="blur(24px) saturate(180%)"
+            borderRadius="20px"
+            border="1px solid"
+            borderColor={COLORS.glassBorder}
             overflow="hidden"
             mb={6}
+            boxShadow={COLORS.glassShadow}
+            transition="box-shadow 0.3s ease"
+            _hover={{ boxShadow: COLORS.glassShadowHover }}
+            /* Inner highlight — mimics light refraction on glass edge */
+            sx={{
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '1px',
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)',
+                zIndex: 1,
+              },
+            }}
+            position="relative"
           >
-            {/* Section header — iOS grouped style */}
+            {/* Section header */}
             <Box px={{ base: 5, md: 6 }} pt={5} pb={2}>
               <Text
                 color={COLORS.textTertiary}
@@ -361,13 +414,17 @@ const SignNDAPage: React.FC = () => {
 
             <Box px={{ base: 5, md: 6 }} pb={6}>
               <VStack align="stretch" spacing={5}>
-                {/* NDA Terms — Scrollable */}
+                {/* NDA Terms — Scrollable with frosted inner panel */}
                 <Box
                   maxH="320px"
                   overflowY="auto"
-                  bg={COLORS.bgGrouped}
+                  bg="rgba(242, 242, 247, 0.6)"
+                  backdropFilter="blur(8px)"
+                  sx={{ WebkitBackdropFilter: 'blur(8px)' }}
                   p={{ base: 4, md: 5 }}
-                  borderRadius="12px"
+                  borderRadius="14px"
+                  border="0.5px solid"
+                  borderColor="rgba(0, 0, 0, 0.04)"
                   css={{
                     '&::-webkit-scrollbar': { width: '4px' },
                     '&::-webkit-scrollbar-track': { background: 'transparent' },
@@ -451,12 +508,13 @@ const SignNDAPage: React.FC = () => {
                         if (nameError) setNameError('');
                       }}
                       placeholder="Enter your full legal name"
-                      bg={COLORS.bg}
+                      bg="rgba(255, 255, 255, 0.8)"
+                      backdropFilter="blur(8px)"
                       border="1px solid"
-                      borderColor={COLORS.separatorLight}
+                      borderColor="rgba(0, 0, 0, 0.06)"
                       color={COLORS.text}
                       _placeholder={{ color: COLORS.separator }}
-                      _hover={{ borderColor: COLORS.separator }}
+                      _hover={{ borderColor: 'rgba(0, 0, 0, 0.12)' }}
                       _focus={{
                         borderColor: COLORS.primary,
                         boxShadow: `0 0 0 3px ${COLORS.primary}20`,
@@ -471,10 +529,12 @@ const SignNDAPage: React.FC = () => {
 
                   <FormControl isInvalid={!!termsError}>
                     <Box
-                      bg={agreedToTerms ? `${COLORS.primary}08` : COLORS.bgGrouped}
+                      bg={agreedToTerms ? `${COLORS.primary}0A` : 'rgba(242, 242, 247, 0.6)'}
+                      backdropFilter="blur(8px)"
+                      sx={{ WebkitBackdropFilter: 'blur(8px)' }}
                       border="0.5px solid"
-                      borderColor={agreedToTerms ? `${COLORS.primary}40` : COLORS.separatorLight}
-                      borderRadius="12px"
+                      borderColor={agreedToTerms ? `${COLORS.primary}40` : 'rgba(0, 0, 0, 0.04)'}
+                      borderRadius="14px"
                       p={4}
                       transition="all 0.2s"
                     >
@@ -526,7 +586,7 @@ const SignNDAPage: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Submit Button */}
+          {/* Submit Button — Liquid Glass CTA */}
           <Button
             onClick={handleSignNDA}
             isLoading={isSubmitting}
@@ -535,14 +595,18 @@ const SignNDAPage: React.FC = () => {
             width="full"
             bg={COLORS.primary}
             color="white"
-            _hover={{ bg: COLORS.primaryHover }}
-            _active={{ opacity: 0.8 }}
+            _hover={{
+              bg: COLORS.primaryHover,
+              boxShadow: `0 6px 20px rgba(47, 128, 237, 0.35)`,
+            }}
+            _active={{ opacity: 0.85, transform: 'scale(0.99)' }}
             isDisabled={!agreedToTerms || !signerName.trim() || isSubmitting}
-            borderRadius="12px"
+            borderRadius="14px"
             fontWeight="600"
             h="50px"
             fontSize="17px"
-            transition="all 0.15s"
+            transition="all 0.2s"
+            boxShadow="0 4px 14px rgba(47, 128, 237, 0.25)"
           >
             Sign &amp; Continue
           </Button>
