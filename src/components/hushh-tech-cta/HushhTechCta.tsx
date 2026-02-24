@@ -1,0 +1,65 @@
+/**
+ * HushhTechCta — Reusable CTA button component
+ * Two variants: BLACK (filled) and WHITE (outlined)
+ *
+ * Usage:
+ *   <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handleClick}>
+ *     Allow while using app
+ *   </HushhTechCta>
+ */
+import React from "react";
+
+/** Enum for CTA button variants */
+export enum HushhTechCtaVariant {
+  BLACK = "black",
+  WHITE = "white",
+}
+
+interface HushhTechCtaProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /** Visual variant — BLACK (filled) or WHITE (outlined) */
+  variant: HushhTechCtaVariant;
+  /** Button content */
+  children: React.ReactNode;
+}
+
+/** Tailwind classes for each variant */
+const VARIANT_CLASSES: Record<HushhTechCtaVariant, string> = {
+  [HushhTechCtaVariant.BLACK]: [
+    "bg-black text-white border border-black",
+    "shadow-lg hover:shadow-xl hover:bg-black/90",
+    "active:scale-[0.99] transition-all",
+  ].join(" "),
+
+  [HushhTechCtaVariant.WHITE]: [
+    "bg-white text-black border border-black",
+    "hover:bg-gray-50",
+    "active:scale-[0.99] transition-colors",
+  ].join(" "),
+};
+
+/** Base classes shared by both variants */
+const BASE_CLASSES = [
+  "w-full h-12",
+  "font-medium text-[0.8rem]",
+  "flex items-center justify-center",
+  "disabled:opacity-50 disabled:cursor-not-allowed",
+].join(" ");
+
+const HushhTechCta: React.FC<HushhTechCtaProps> = ({
+  variant,
+  children,
+  className = "",
+  ...rest
+}) => {
+  return (
+    <button
+      className={`${BASE_CLASSES} ${VARIANT_CLASSES[variant]} ${className}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+};
+
+export default HushhTechCta;
