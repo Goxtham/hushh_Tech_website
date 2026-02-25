@@ -30,8 +30,8 @@ const inlineInput = "text-right text-sm font-medium bg-transparent border-none f
 /* ── page ── */
 const HushhUserProfilePage: React.FC = () => {
   const {
-    form, investorProfile, loading, loadingSeconds, hasOnboardingData,
-    isApplePassLoading, isGooglePassLoading, nwsResult, nwsLoading,
+    form, investorProfile, loading, loadingSeconds, isProcessing, investorStatus, shadowStatus,
+    hasOnboardingData, isApplePassLoading, isGooglePassLoading, nwsResult, nwsLoading,
     hasCopied, onCopy, profileUrl, navigate,
     handleChange, handleSubmit, handleBack, handleSave,
     handleAppleWalletPass, handleGoogleWalletPass, COUNTRIES,
@@ -83,6 +83,40 @@ const HushhUserProfilePage: React.FC = () => {
             </span>
           )}
         </section>
+
+        {/* ── Processing Banner — persistent, non-blocking ── */}
+        {isProcessing && (
+          <section className="mb-6 border border-gray-200 rounded-2xl p-4 bg-gray-50/50 animate-pulse-slow">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-medium">
+                building profile · {loadingSeconds}s
+              </span>
+              <span className="w-2 h-2 bg-black rounded-full animate-ping" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500 lowercase">investor profile</span>
+                <span className={`text-[10px] uppercase tracking-widest font-medium ${
+                  investorStatus === 'running' ? 'text-gray-400' :
+                  investorStatus === 'done' ? 'text-green-600' : 'text-red-500'
+                }`}>
+                  {investorStatus === 'running' ? 'analyzing...' :
+                   investorStatus === 'done' ? 'ready ✓' : investorStatus === 'error' ? 'failed' : '—'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500 lowercase">shadow profile</span>
+                <span className={`text-[10px] uppercase tracking-widest font-medium ${
+                  shadowStatus === 'running' ? 'text-gray-400' :
+                  shadowStatus === 'done' ? 'text-green-600' : 'text-red-500'
+                }`}>
+                  {shadowStatus === 'running' ? 'analyzing...' :
+                   shadowStatus === 'done' ? 'ready ✓' : shadowStatus === 'error' ? 'failed' : '—'}
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── AI section ── */}
         <section className="mb-12">

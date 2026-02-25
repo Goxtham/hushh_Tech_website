@@ -106,6 +106,11 @@ export const useHushhUserProfileLogic = () => {
   const [investorProfile, setInvestorProfile] = useState<InvestorProfile | null>(null);
   const [profileSlug, setProfileSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Per-API status for non-blocking background processing
+  type ApiStatus = 'idle' | 'running' | 'done' | 'error';
+  const [investorStatus, setInvestorStatus] = useState<ApiStatus>('idle');
+  const [shadowStatus, setShadowStatus] = useState<ApiStatus>('idle');
+  const isProcessing = investorStatus === 'running' || shadowStatus === 'running';
   const [hasOnboardingData, setHasOnboardingData] = useState(false);
   const [isApplePassLoading, setIsApplePassLoading] = useState(false);
   const [isGooglePassLoading, setIsGooglePassLoading] = useState(false);
@@ -471,187 +476,149 @@ export const useHushhUserProfileLogic = () => {
     setForm((prev) => ({ ...prev, [key]: key === "age" || key === "initialInvestmentAmount" ? Number(value) || "" : value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Helper: save partial profile data to Supabase (called by each API independently)
+  const saveToSupabase = async (
+    partialPayload: Record<string, unknown>
+  ) => {
+    if (!userId) return;
+    const supabase = resources.config.supabaseClient;
+    if (!supabase) return;
+    try {
+      const { data } = await supabase
+        .from("investor_profiles")
+        .upsert({
+          user_id: userId,
+          name: form.name,
+          email: form.email,
+          age: typeof form.age === "number" ? form.age : Number(form.age),
+          phone_country_code: form.phoneCountryCode,
+          phone_number: form.phoneNumber,
+          organisation: form.organisation || null,
+          is_public: true,
+          user_confirmed: true,
+          confirmed_at: new Date().toISOString(),
+          ...partialPayload,
+        })
+        .select("slug")
+        .maybeSingle();
+      if (data?.slug) setProfileSlug(data.slug);
+    } catch (err) {
+      console.warn("[Profile] Supabase save failed:", err);
+    }
+  };
+
+  // Check if both APIs finished — stop timer when both are done
+  const checkAllDone = (invStatus: ApiStatus, shdStatus: ApiStatus) => {
+    if (invStatus !== 'running' && shdStatus !== 'running') {
+      stopTimer();
+      setLoading(false);
+    }
+  };
+
+  /**
+   * handleSubmit — NON-BLOCKING background processing
+   * Fires both APIs independently. Each updates state when it completes.
+   * User can scroll, edit, navigate while APIs run in background.
+   * No timeout — these are heavy APIs that take as long as they need.
+   */
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Edge case: prevent double-submit while loading
-    if (loading) return;
+    // Prevent double-submit while already processing
+    if (isProcessing || loading) return;
 
     // Validate required fields
     if (!form.name?.trim() || !form.email?.trim() || form.age === "") {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields (Name, Email, Age)",
-        status: "warning",
-        duration: 4000,
-      });
+      toast({ title: "Missing fields", description: "Please fill in Name, Email, and Age", status: "warning", duration: 4000 });
       return;
     }
 
-    // Edge case: basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email.trim())) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address",
-        status: "warning",
-        duration: 4000,
-      });
+      toast({ title: "Invalid email", description: "Please enter a valid email address", status: "warning", duration: 4000 });
       return;
     }
 
-    // Edge case: age bounds check (1-120)
     const ageNum = typeof form.age === "number" ? form.age : Number(form.age);
     if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
-      toast({
-        title: "Invalid age",
-        description: "Age must be between 1 and 120",
-        status: "warning",
-        duration: 4000,
-      });
+      toast({ title: "Invalid age", description: "Age must be between 1 and 120", status: "warning", duration: 4000 });
       return;
     }
 
+    // ── Start background processing ──
     setLoading(true);
-    setShadowLoading(true);
+    setInvestorStatus('running');
+    setShadowStatus('running');
     startTimer();
 
-    // 30s timeout — abort if APIs take too long
-    const TIMEOUT_MS = 30_000;
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Request timed out after 30s. Please try again.")), TIMEOUT_MS)
-    );
+    toast({
+      title: "Building your profile",
+      description: "Hushh AI is analyzing in the background — you can keep scrolling",
+      status: "info",
+      duration: 5000,
+      isClosable: true,
+    });
 
-    try {
-      // Call BOTH APIs in parallel with 30s timeout guard
-      const [investorResult, shadowResult] = await Promise.race([
-        Promise.allSettled([
-          generateInvestorProfile({
-            name: form.name,
-            email: form.email,
-            age: typeof form.age === "number" ? form.age : Number(form.age),
-            phone_country_code: form.phoneCountryCode,
-            phone_number: form.phoneNumber,
-            organisation: form.organisation || undefined,
-          }),
-          invokeShadowInvestigator({
-            name: form.name,
-            email: form.email,
-            contact: formatPhoneContact(form.phoneCountryCode, form.phoneNumber),
-            country: form.residenceCountry || form.citizenshipCountry || undefined,
-            age: typeof form.age === 'number' ? form.age : (form.dateOfBirth 
-              ? Math.floor((Date.now() - new Date(form.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-              : undefined),
-            dateOfBirth: form.dateOfBirth || undefined,
-          }),
-        ]),
-        timeoutPromise,
-      ]);
-
-      // Handle Investor Profile result
-      let investorProfileData = null;
-      if (investorResult.status === 'fulfilled' && investorResult.value.success && investorResult.value.profile) {
-        investorProfileData = investorResult.value.profile;
-        setInvestorProfile(investorProfileData);
+    // ── API 1: Investor Profile (fire-and-forget) ──
+    generateInvestorProfile({
+      name: form.name,
+      email: form.email,
+      age: ageNum,
+      phone_country_code: form.phoneCountryCode,
+      phone_number: form.phoneNumber,
+      organisation: form.organisation || undefined,
+    }).then((result) => {
+      if (result.success && result.profile) {
+        setInvestorProfile(result.profile);
+        setInvestorStatus('done');
+        toast({ title: "Investor profile ready ✓", status: "success", duration: 3000 });
+        // Save to Supabase (non-blocking)
+        saveToSupabase({ investor_profile: result.profile });
       } else {
-        const error = investorResult.status === 'rejected' 
-          ? investorResult.reason 
-          : investorResult.value.error;
-        console.error('[Profile] Investor profile error:', error);
+        setInvestorStatus('error');
+        console.error("[Profile] Investor profile error:", result.error);
+        toast({ title: "Investor profile failed", description: result.error || "Will retry later", status: "warning", duration: 4000 });
       }
+    }).catch((err) => {
+      setInvestorStatus('error');
+      console.error("[Profile] Investor profile exception:", err);
+      toast({ title: "Investor profile failed", description: "Network error — will retry later", status: "warning", duration: 4000 });
+    }).finally(() => {
+      // Check if both are done
+      setShadowStatus((prev) => { checkAllDone('done', prev); return prev; });
+    });
 
-      // Handle Shadow Investigator result
-      let shadowProfileData = null;
-      if (shadowResult.status === 'fulfilled' && shadowResult.value.success && shadowResult.value.data) {
-        shadowProfileData = shadowResult.value.data.structured;
-        setShadowProfile(shadowProfileData);
-        console.log('[Profile] Shadow profile loaded:', shadowProfileData.confidence);
+    // ── API 2: Shadow Investigator (fire-and-forget) ──
+    invokeShadowInvestigator({
+      name: form.name,
+      email: form.email,
+      contact: formatPhoneContact(form.phoneCountryCode, form.phoneNumber),
+      country: form.residenceCountry || form.citizenshipCountry || undefined,
+      age: ageNum || (form.dateOfBirth
+        ? Math.floor((Date.now() - new Date(form.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+        : undefined),
+      dateOfBirth: form.dateOfBirth || undefined,
+    }).then((result) => {
+      if (result.success && result.data) {
+        const structured = result.data.structured;
+        setShadowProfile(structured);
+        setShadowStatus('done');
+        setShadowLoading(false);
+        toast({ title: "Shadow profile ready ✓", status: "success", duration: 3000 });
+        saveToSupabase({ shadow_profile: structured });
       } else {
-        const error = shadowResult.status === 'rejected' 
-          ? shadowResult.reason 
-          : shadowResult.value.error;
-        console.error('[Profile] Shadow investigator error:', error);
+        setShadowStatus('error');
+        setShadowLoading(false);
+        console.error("[Profile] Shadow investigator error:", result.error);
       }
-
-      // Save BOTH profiles to Supabase for data consistency (shared profile links)
-      if (userId && (investorProfileData || shadowProfileData)) {
-        const supabase = resources.config.supabaseClient;
-        if (supabase) {
-          const updatePayload: Record<string, unknown> = {
-            user_id: userId,
-            name: form.name,
-            email: form.email,
-            age: typeof form.age === "number" ? form.age : Number(form.age),
-            phone_country_code: form.phoneCountryCode,
-            phone_number: form.phoneNumber,
-            organisation: form.organisation || null,
-            is_public: true, // Always public so shared links work
-            user_confirmed: true,
-            confirmed_at: new Date().toISOString(),
-          };
-
-          // Add investor_profile if available
-          if (investorProfileData) {
-            updatePayload.investor_profile = investorProfileData;
-          }
-
-          // Add shadow_profile if available (for public profile sharing)
-          if (shadowProfileData) {
-            updatePayload.shadow_profile = shadowProfileData;
-          }
-
-          const { data: upsertData } = await supabase
-            .from("investor_profiles")
-            .upsert(updatePayload)
-            .select("slug")
-            .maybeSingle();
-
-          // Set profile slug if returned
-          if (upsertData?.slug) {
-            setProfileSlug(upsertData.slug);
-          }
-        }
-      }
-
-      // Show whatever succeeded — don't require both APIs
-      const investorSuccess = investorResult.status === 'fulfilled' && investorResult.value.success;
-      const shadowSuccess = shadowResult.status === 'fulfilled' && shadowResult.value.success;
-
-      if (investorSuccess && shadowSuccess) {
-        toast({
-          title: "Profile Complete",
-          description: "AI profile generated successfully",
-          status: "success",
-          duration: 4000,
-        });
-      } else if (!investorSuccess && !shadowSuccess) {
-        // Both failed — throw error
-        setInvestorProfile(null);
-        setShadowProfile(null);
-        throw new Error("Failed to generate profiles. Please try again.");
-      } else {
-        // At least one succeeded — show partial results (don't clear them)
-        toast({
-          title: "Profile Generated",
-          description: investorSuccess
-            ? "Investor profile ready. Shadow profile will retry later."
-            : "Shadow profile ready. Investor profile will retry later.",
-          status: "success",
-          duration: 4000,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate profile",
-        status: "error",
-        duration: 5000,
-      });
-    } finally {
-      setLoading(false);
+    }).catch((err) => {
+      setShadowStatus('error');
       setShadowLoading(false);
-      stopTimer();
-    }
+      console.error("[Profile] Shadow investigator exception:", err);
+    }).finally(() => {
+      // Check if both are done
+      setInvestorStatus((prev) => { checkAllDone(prev, 'done'); return prev; });
+    });
   };
 
   const handleBack = () => {
@@ -668,7 +635,7 @@ export const useHushhUserProfileLogic = () => {
 
   // handleSave — directly calls handleSubmit (no <form> tag needed)
   const handleSave = () => {
-    if (loading) return;
+    if (loading || isProcessing) return;
     if (!userId) {
       toast({ title: "Please wait", description: "Still loading your profile...", status: "info", duration: 3000 });
       return;
@@ -842,7 +809,8 @@ export const useHushhUserProfileLogic = () => {
 
   return {
     form, setForm, userId, investorProfile, setInvestorProfile, profileSlug,
-    loading, loadingSeconds, setLoading, hasOnboardingData, isApplePassLoading, isGooglePassLoading,
+    loading, loadingSeconds, isProcessing, investorStatus, shadowStatus,
+    setLoading, hasOnboardingData, isApplePassLoading, isGooglePassLoading,
     editingField, setEditingField, shadowProfile, shadowLoading, nwsResult, nwsLoading,
     isFooterVisible, hasCopied, onCopy, profileUrl, navigate, toast,
     FIELD_OPTIONS, MULTI_SELECT_FIELDS, COUNTRIES, defaultFormState,
