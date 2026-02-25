@@ -43,14 +43,16 @@ const FeatureCard = ({
   icon,
   title,
   description,
+  iconColor = "text-gray-700",
 }: {
   icon: string;
   title: string;
   description: string;
+  iconColor?: string;
 }) => (
   <div className="flex items-start gap-4 border border-gray-200 rounded-2xl p-5 hover:border-gray-300 hover:bg-gray-50/50 transition-all">
     <div className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center shrink-0 bg-white">
-      <span className="material-symbols-outlined text-gray-700 !text-[1.15rem]">
+      <span className={`material-symbols-outlined ${iconColor} !text-[1.15rem]`}>
         {icon}
       </span>
     </div>
@@ -65,12 +67,18 @@ const FeatureCard = ({
   </div>
 );
 
-/* ── icon map for cards ── */
+/* ── icon + color maps for cards ── */
 const PHILOSOPHY_ICONS: Record<string, string> = {
   "Options Intelligence": "psychology",
   "AI-Enhanced Research": "neurology",
   "Risk-First Architecture": "shield",
   "Concentrated Conviction": "target",
+};
+const PHILOSOPHY_COLORS: Record<string, string> = {
+  "Options Intelligence": "text-hushh-blue",
+  "AI-Enhanced Research": "text-hushh-blue",
+  "Risk-First Architecture": "text-ios-green",
+  "Concentrated Conviction": "text-ios-dark",
 };
 
 const EDGE_ICONS: Record<string, string> = {
@@ -79,11 +87,22 @@ const EDGE_ICONS: Record<string, string> = {
   "Income Generation": "payments",
   "Downside Protection": "security",
 };
+const EDGE_COLORS: Record<string, string> = {
+  "Volatility Harvesting": "text-hushh-blue",
+  "Asymmetric Returns": "text-hushh-blue",
+  "Income Generation": "text-ios-green",
+  "Downside Protection": "text-ios-green",
+};
 
 const ASSET_ICONS: Record<string, string> = {
   "U.S. Large-Cap Equities": "account_balance",
   "Strategic Options Overlay": "tune",
   "Cash & Equivalents": "savings",
+};
+const ASSET_COLORS: Record<string, string> = {
+  "U.S. Large-Cap Equities": "text-hushh-blue",
+  "Strategic Options Overlay": "text-ios-yellow",
+  "Cash & Equivalents": "text-ios-green",
 };
 
 const RISK_ICONS: Record<string, string> = {
@@ -91,6 +110,12 @@ const RISK_ICONS: Record<string, string> = {
   "Hedging Framework": "shield",
   "Drawdown Protocols": "trending_down",
   "Liquidity Management": "water_drop",
+};
+const RISK_COLORS: Record<string, string> = {
+  "Position Limits": "text-ios-yellow",
+  "Hedging Framework": "text-ios-green",
+  "Drawdown Protocols": "text-ios-red",
+  "Liquidity Management": "text-hushh-blue",
 };
 
 const FundA = () => {
@@ -191,6 +216,7 @@ const FundA = () => {
             <FeatureCard
               key={card.title}
               icon={PHILOSOPHY_ICONS[card.title] || "lightbulb"}
+              iconColor={PHILOSOPHY_COLORS[card.title] || "text-hushh-blue"}
               title={card.title}
               description={card.description}
             />
@@ -215,6 +241,7 @@ const FundA = () => {
             <FeatureCard
               key={card.title}
               icon={EDGE_ICONS[card.title] || "auto_awesome"}
+              iconColor={EDGE_COLORS[card.title] || "text-hushh-blue"}
               title={card.title}
               description={card.description}
             />
@@ -231,6 +258,7 @@ const FundA = () => {
             <FeatureCard
               key={pillar.title}
               icon={ASSET_ICONS[pillar.title] || "category"}
+              iconColor={ASSET_COLORS[pillar.title] || "text-hushh-blue"}
               title={pillar.title}
               description={pillar.description}
             />
@@ -276,6 +304,7 @@ const FundA = () => {
             <FeatureCard
               key={card.title}
               icon={RISK_ICONS[card.title] || "security"}
+              iconColor={RISK_COLORS[card.title] || "text-ios-green"}
               title={card.title}
               description={card.description}
             />
