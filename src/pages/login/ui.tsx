@@ -10,6 +10,8 @@ import HushhTechCta, {
 } from "../../components/hushh-tech-cta/HushhTechCta";
 import { FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import HushhTechHeader from "../../components/hushh-tech-header/HushhTechHeader";
+import HushhTechFooter from "../../components/hushh-tech-footer/HushhTechFooter";
 
 export default function LoginPage() {
   const { isLoading, isSigningIn, handleAppleSignIn, handleGoogleSignIn } =
@@ -19,6 +21,9 @@ export default function LoginPage() {
 
   return (
     <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+      {/* ═══ Common Header ═══ */}
+      <HushhTechHeader />
+
       <main className="px-6 flex-grow max-w-md mx-auto w-full flex flex-col justify-center pb-12">
         {/* ── Logo ── */}
         <section className="flex justify-center pt-16 pb-8">
@@ -104,6 +109,9 @@ export default function LoginPage() {
           </Link>
         </p>
       </main>
+
+      {/* ═══ Common Footer with Navigation ═══ */}
+      <HushhTechFooter />
     </div>
   );
 }

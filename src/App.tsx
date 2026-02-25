@@ -109,9 +109,11 @@ const ContentWrapper = ({ children }: { children: ReactNode }) => {
   const isDiscoverFundA = location.pathname === '/discover-fund-a';
   const isCommunity = location.pathname.startsWith('/community');
   const isDeleteAccount = location.pathname === '/delete-account';
+  const isLogin = location.pathname.toLowerCase() === '/login';
+  const isSignup = location.pathname.toLowerCase() === '/signup';
 
   return (
-    <div className={`${isHomePage || isAuthCallback || isUserRegistration || isOnboarding || isKycFlow || isA2APlayground || isInvestorGuide || isHushhAI || isHushhAgent || isKai || isStudio || isHushhUserProfile || isSignNda || isInvestorProfile || isDiscoverFundA || isCommunity || isDeleteAccount ? '' : 'mt-20'}`}>
+    <div className={`${isHomePage || isAuthCallback || isUserRegistration || isOnboarding || isKycFlow || isA2APlayground || isInvestorGuide || isHushhAI || isHushhAgent || isKai || isStudio || isHushhUserProfile || isSignNda || isInvestorProfile || isDiscoverFundA || isCommunity || isDeleteAccount || isLogin || isSignup ? '' : 'mt-20'}`}>
       {children}
     </div>
   );
@@ -130,9 +132,11 @@ const useLayoutVisibility = () => {
   const isFundA = location.pathname === '/discover-fund-a';
   const isCommunity = location.pathname.startsWith('/community');
   const isDeleteAccount = location.pathname === '/delete-account';
+  const isLogin = location.pathname.toLowerCase() === '/login';
+  const isSignup = location.pathname.toLowerCase() === '/signup';
 
-  // Home + Onboarding + Profile + Fund A + Community + Delete Account use HushhTechHeader/Footer — hide old global nav/footer
-  const hideOld = isHushhAI || isHushhAgent || isKai || isStudio || isHomePage || isOnboarding || isProfile || isFundA || isCommunity || isDeleteAccount;
+  // Home + Onboarding + Profile + Fund A + Community + Delete Account + Login + Signup use HushhTechHeader/Footer — hide old global nav/footer
+  const hideOld = isHushhAI || isHushhAgent || isKai || isStudio || isHomePage || isOnboarding || isProfile || isFundA || isCommunity || isDeleteAccount || isLogin || isSignup;
   return {
     showNavbar: !hideOld,
     showFooter: !hideOld,
