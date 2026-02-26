@@ -40,22 +40,22 @@ export default function OnboardingStep8() {
   } = useStep8Logic();
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-48">
         {/* ── Progress Bar ── */}
         <div className="py-4">
-          <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3 lowercase">
+          <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3">
             <span>
-              step {DISPLAY_STEP}/{TOTAL_STEPS}
+              Step {DISPLAY_STEP}/{TOTAL_STEPS}
             </span>
-            <span>{PROGRESS_PCT}% complete</span>
+            <span>{PROGRESS_PCT}% Complete</span>
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-black transition-all duration-500"
+              className="h-full bg-hushh-blue transition-all duration-500"
               style={{ width: `${PROGRESS_PCT}%` }}
             />
           </div>
@@ -63,19 +63,19 @@ export default function OnboardingStep8() {
 
         {/* ── Title Section ── */}
         <section className="py-8">
-          <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">
-            residence
+          <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">
+            Residence
           </h3>
           <h1
-            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight lowercase"
+            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            enter your
+            Enter Your
             <br />
-            <span className="text-gray-400 italic font-normal">address</span>
+            <span className="text-gray-400 italic font-light">Address</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-4 leading-relaxed lowercase font-medium">
-            please provide your primary residence address.
+          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
+            Please provide your primary residence address.
           </p>
         </section>
 
@@ -84,17 +84,17 @@ export default function OnboardingStep8() {
           <div className="flex items-center gap-3 py-4 px-1 mb-4 border-b border-gray-100">
             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
               {isDetecting ? (
-                <div className="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full" />
+                <div className="animate-spin h-5 w-5 border-2 border-hushh-blue border-t-transparent rounded-full" />
               ) : (
                 <span
-                  className="material-symbols-outlined text-green-600 text-lg"
+                  className="material-symbols-outlined text-ios-green text-lg"
                   style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}
                 >
                   check
                 </span>
               )}
             </div>
-            <p className="text-sm font-medium text-gray-700 lowercase">
+            <p className="text-sm font-medium text-gray-700">
               {detectionStatus}
             </p>
           </div>
@@ -118,11 +118,11 @@ export default function OnboardingStep8() {
               </span>
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900 lowercase">
-                use my current location
+              <p className="text-sm font-semibold text-gray-900">
+                Use My Current Location
               </p>
-              <p className="text-xs text-gray-500 lowercase font-medium">
-                auto-fill address using gps
+              <p className="text-xs text-gray-500 font-medium">
+                Auto-fill address using GPS
               </p>
             </div>
           </button>
@@ -139,7 +139,7 @@ export default function OnboardingStep8() {
                 error
               </span>
             </div>
-            <p className="text-sm font-medium text-red-700 lowercase">
+            <p className="text-sm font-medium text-red-700">
               {error}
             </p>
           </div>
@@ -161,9 +161,9 @@ export default function OnboardingStep8() {
               <div className="flex-1 min-w-0">
                 <label
                   htmlFor="addressLine1"
-                  className="text-sm font-semibold text-gray-900 lowercase block mb-1"
+                  className="text-sm font-semibold text-gray-900 block mb-1"
                 >
-                  address line 1
+                  Address Line 1
                 </label>
                 <input
                   id="addressLine1"
@@ -171,10 +171,9 @@ export default function OnboardingStep8() {
                   value={addressLine1}
                   onChange={(e) => handleAddressLine1Change(e.target.value)}
                   onBlur={() => handleBlur("addressLine1", addressLine1)}
-                  placeholder="street address"
-                  className="w-full text-sm text-gray-700 font-medium lowercase bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
+                  placeholder="Street address"
+                  className="w-full text-sm text-gray-700 font-medium bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
                   autoComplete="address-line1"
-                  style={{ textTransform: "lowercase" }}
                 />
               </div>
             </div>
@@ -199,19 +198,18 @@ export default function OnboardingStep8() {
               <div className="flex-1 min-w-0">
                 <label
                   htmlFor="addressLine2"
-                  className="text-sm font-semibold text-gray-900 lowercase block mb-1"
+                  className="text-sm font-semibold text-gray-900 block mb-1"
                 >
-                  address line 2
+                  Address Line 2
                 </label>
                 <input
                   id="addressLine2"
                   type="text"
                   value={addressLine2}
                   onChange={(e) => setAddressLine2(e.target.value)}
-                  placeholder="apt, suite, bldg (optional)"
-                  className="w-full text-sm text-gray-700 font-medium lowercase bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
+                  placeholder="Apt, suite, bldg (optional)"
+                  className="w-full text-sm text-gray-700 font-medium bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
                   autoComplete="address-line2"
-                  style={{ textTransform: "lowercase" }}
                 />
               </div>
             </div>
@@ -293,9 +291,9 @@ export default function OnboardingStep8() {
               <div className="flex-1 min-w-0">
                 <label
                   htmlFor="zipCode"
-                  className="text-sm font-semibold text-gray-900 lowercase block mb-1"
+                  className="text-sm font-semibold text-gray-900 block mb-1"
                 >
-                  zip / postal code
+                  ZIP / Postal Code
                 </label>
                 <input
                   id="zipCode"
@@ -305,7 +303,7 @@ export default function OnboardingStep8() {
                   onChange={(e) => handleZipCodeChange(e.target.value)}
                   onBlur={() => handleBlur("zipCode", zipCode)}
                   placeholder="e.g. 10001"
-                  className="w-full text-sm text-gray-700 font-medium lowercase bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
+                  className="w-full text-sm text-gray-700 font-medium bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
                   autoComplete="postal-code"
                 />
               </div>
@@ -316,8 +314,8 @@ export default function OnboardingStep8() {
               {errors.zipCode}
             </p>
           ) : (
-            <p className="text-[10px] text-gray-400 pl-14 pt-1 lowercase font-medium">
-              supports numeric and alphanumeric codes based on region.
+            <p className="text-[10px] text-gray-400 pl-14 pt-1 font-light">
+              Supports numeric and alphanumeric codes based on region.
             </p>
           )}
         </section>
@@ -343,11 +341,11 @@ export default function OnboardingStep8() {
         {/* ── Trust Badges ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-gray-600">
+            <span className="material-symbols-outlined text-[12px] text-hushh-blue">
               lock
             </span>
-            <span className="text-[10px] text-gray-600 tracking-wide uppercase font-medium">
-              256 bit encryption
+            <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">
+              256 Bit Encryption
             </span>
           </div>
         </section>

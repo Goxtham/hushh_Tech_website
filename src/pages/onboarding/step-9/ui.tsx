@@ -39,31 +39,31 @@ export default function OnboardingStep9() {
   } = useStep9Logic();
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-48">
         {/* ── Progress Bar ── */}
         <div className="py-4">
-          <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3 lowercase">
-            <span>step {DISPLAY_STEP}/{TOTAL_STEPS}</span>
-            <span>{PROGRESS_PCT}% complete</span>
+          <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3">
+            <span>Step {DISPLAY_STEP}/{TOTAL_STEPS}</span>
+            <span>{PROGRESS_PCT}% Complete</span>
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-black transition-all duration-500" style={{ width: `${PROGRESS_PCT}%` }} />
+            <div className="h-full bg-hushh-blue transition-all duration-500" style={{ width: `${PROGRESS_PCT}%` }} />
           </div>
         </div>
 
         {/* ── Title Section ── */}
         <section className="py-8">
-          <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">verification</h3>
-          <h1 className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight lowercase" style={{ fontFamily: "'Playfair Display', serif" }}>
-            a few more<br />
-            <span className="text-gray-400 italic font-normal">details</span>
+          <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">Verification</h3>
+          <h1 className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif" style={{ fontFamily: "'Playfair Display', serif" }}>
+            A Few More<br />
+            <span className="text-gray-400 italic font-light">Details</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-4 leading-relaxed lowercase font-medium">
-            federal law requires us to collect this info for tax reporting.
+          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
+            Federal law requires us to collect this info for tax reporting.
           </p>
         </section>
 
@@ -73,7 +73,7 @@ export default function OnboardingStep9() {
             <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-red-500 text-lg" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>error</span>
             </div>
-            <p className="text-sm font-medium text-red-700 lowercase">{error}</p>
+            <p className="text-sm font-medium text-red-700">{error}</p>
           </div>
         )}
 
@@ -85,7 +85,7 @@ export default function OnboardingStep9() {
                 <span className="material-symbols-outlined text-gray-700 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>lock</span>
               </div>
               <div className="flex-1 min-w-0">
-                <label htmlFor="ssn" className="text-sm font-semibold text-gray-900 lowercase block mb-1">social security number</label>
+                <label htmlFor="ssn" className="text-sm font-semibold text-gray-900 block mb-1">Social Security Number</label>
                 <input
                   id="ssn"
                   type="text"
@@ -107,14 +107,14 @@ export default function OnboardingStep9() {
                 <span className="material-symbols-outlined text-gray-700 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>info</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 lowercase">why do we need your ssn?</p>
-                <p className="text-xs text-gray-500 lowercase font-medium">tap to learn more</p>
+                <p className="text-sm font-semibold text-gray-900">Why do we need your SSN?</p>
+                <p className="text-xs text-gray-500 font-medium">Tap to learn more</p>
               </div>
               <span className="material-symbols-outlined text-gray-400 text-lg transition-transform group-open:rotate-180" style={{ fontVariationSettings: "'wght' 400" }}>expand_more</span>
             </summary>
             <div className="pl-14 pb-5 pr-4">
-              <p className="text-xs text-gray-500 leading-relaxed lowercase font-medium">
-                we are required by federal law to collect this information to prevent fraud and verify your identity before opening an investment account.
+              <p className="text-xs text-gray-500 leading-relaxed font-light">
+                We are required by federal law to collect this information to prevent fraud and verify your identity before opening an investment account.
               </p>
             </div>
           </details>
@@ -123,7 +123,7 @@ export default function OnboardingStep9() {
         {/* ── Date of Birth Section ── */}
         <section className="space-y-0 mb-6">
           <div className="py-4">
-            <h3 className="text-[11px] tracking-wide text-gray-500 lowercase font-semibold">date of birth</h3>
+            <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase font-medium">Date of Birth</h3>
           </div>
 
           {/* Month — overlay select */}
@@ -133,9 +133,9 @@ export default function OnboardingStep9() {
                 <span className="material-symbols-outlined text-gray-700 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>calendar_month</span>
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-gray-900 lowercase block mb-1">month</span>
-                <span className="text-sm text-gray-700 font-medium lowercase">
-                  {dobMonth ? MONTH_NAMES[parseInt(dobMonth) - 1]?.toLowerCase() : 'select month'}
+                <span className="text-sm font-semibold text-gray-900 block mb-1">Month</span>
+                <span className="text-sm text-gray-700 font-medium">
+                  {dobMonth ? MONTH_NAMES[parseInt(dobMonth) - 1] : 'Select month'}
                 </span>
               </div>
               <span className="material-symbols-outlined text-gray-400 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>expand_more</span>
@@ -160,9 +160,9 @@ export default function OnboardingStep9() {
                 <span className="material-symbols-outlined text-gray-700 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>today</span>
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-gray-900 lowercase block mb-1">day</span>
-                <span className="text-sm text-gray-700 font-medium lowercase">
-                  {dobDay ? parseInt(dobDay) : 'select day'}
+                <span className="text-sm font-semibold text-gray-900 block mb-1">Day</span>
+                <span className="text-sm text-gray-700 font-medium">
+                  {dobDay ? parseInt(dobDay) : 'Select day'}
                 </span>
               </div>
               <span className="material-symbols-outlined text-gray-400 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>expand_more</span>
@@ -187,9 +187,9 @@ export default function OnboardingStep9() {
                 <span className="material-symbols-outlined text-gray-700 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>event</span>
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-gray-900 lowercase block mb-1">year</span>
-                <span className="text-sm text-gray-700 font-medium lowercase">
-                  {dobYear || 'select year'}
+                <span className="text-sm font-semibold text-gray-900 block mb-1">Year</span>
+                <span className="text-sm text-gray-700 font-medium">
+                  {dobYear || 'Select year'}
                 </span>
               </div>
               <span className="material-symbols-outlined text-gray-400 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>expand_more</span>
@@ -213,7 +213,7 @@ export default function OnboardingStep9() {
               <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
                 <span className="material-symbols-outlined text-red-500 text-lg" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>error</span>
               </div>
-              <p className="text-sm font-medium text-red-600 lowercase">{ageError}</p>
+              <p className="text-sm font-medium text-red-600">{ageError}</p>
             </div>
           )}
 
@@ -221,9 +221,9 @@ export default function OnboardingStep9() {
           {isFormValid && (
             <div className="flex items-center gap-3 py-4 px-1">
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-green-600 text-lg" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>check</span>
+                <span className="material-symbols-outlined text-ios-green text-lg" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>check</span>
               </div>
-              <p className="text-sm font-medium text-gray-700 lowercase">
+              <p className="text-sm font-medium text-gray-700">
                 {MONTH_NAMES[parseInt(dobMonth) - 1]} {parseInt(dobDay)}, {dobYear}
               </p>
             </div>
@@ -243,11 +243,11 @@ export default function OnboardingStep9() {
         {/* ── Trust Badges ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-gray-600">lock</span>
-            <span className="text-[10px] text-gray-600 tracking-wide uppercase font-medium">256 bit encryption</span>
+            <span className="material-symbols-outlined text-[12px] text-hushh-blue">lock</span>
+            <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">256 Bit Encryption</span>
           </div>
-          <p className="text-[10px] text-gray-400 lowercase font-medium max-w-xs">
-            your ssn is encrypted end-to-end and never stored in plain text
+          <p className="text-[10px] text-gray-400 font-light max-w-xs">
+            Your SSN is encrypted end-to-end and never stored in plain text.
           </p>
         </section>
       </main>
