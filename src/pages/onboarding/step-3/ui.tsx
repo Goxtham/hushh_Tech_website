@@ -24,22 +24,22 @@ export default function OnboardingStep3() {
   const progress = countdown / AUTO_SKIP_SECONDS;
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-24">
         {/* ── Progress Bar ── */}
         <div className="py-4">
-          <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3 lowercase">
+          <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3">
             <span>
-              step {CURRENT_STEP}/{TOTAL_STEPS}
+              Step {CURRENT_STEP}/{TOTAL_STEPS}
             </span>
-            <span>{PROGRESS_PCT}% complete</span>
+            <span>{PROGRESS_PCT}% Complete</span>
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-black transition-all duration-500"
+              className="h-full bg-hushh-blue transition-all duration-500"
               style={{ width: `${PROGRESS_PCT}%` }}
             />
           </div>
@@ -59,17 +59,17 @@ export default function OnboardingStep3() {
         {/* ── Title Section ── */}
         <section className="py-4 text-center">
           <h1
-            className="text-[2.25rem] leading-[1.15] font-normal text-black tracking-tight lowercase"
+            className="text-[2.25rem] leading-[1.15] font-normal text-black tracking-tight font-serif"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            let&apos;s continue with
+            Let&apos;s Continue With
             <br />
-            <span className="text-gray-400 italic font-normal">
-              some info about you
+            <span className="text-gray-400 italic font-light">
+              Some Info About You
             </span>
           </h1>
-          <p className="text-sm text-gray-500 mt-6 leading-relaxed lowercase font-medium max-w-xs mx-auto">
-            to comply with federal regulations, we are required to collect
+          <p className="text-sm text-gray-500 mt-6 leading-relaxed font-light max-w-xs mx-auto">
+            To comply with federal regulations, we are required to collect
             certain personal information about you.
           </p>
         </section>
@@ -93,7 +93,7 @@ export default function OnboardingStep3() {
                 cy="32"
                 r="28"
                 fill="none"
-                stroke="#000"
+                stroke="#0066CC"
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeDasharray={`${2 * Math.PI * 28}`}
@@ -108,8 +108,8 @@ export default function OnboardingStep3() {
               </span>
             </div>
           </div>
-          <p className="text-[11px] text-gray-400 mt-3 lowercase font-medium">
-            auto-continuing in {countdown}s
+          <p className="text-[11px] text-gray-400 mt-3 font-medium">
+            Auto-continuing in {countdown}s
           </p>
         </section>
 
@@ -134,11 +134,11 @@ export default function OnboardingStep3() {
         {/* ── Trust Badges ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-gray-600">
-              lock
-            </span>
-            <span className="text-[10px] text-gray-600 tracking-wide uppercase font-medium">
-              256 bit encryption
+              <span className="material-symbols-outlined text-[12px] text-hushh-blue">
+                lock
+              </span>
+              <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">
+                256 Bit Encryption
             </span>
           </div>
         </section>

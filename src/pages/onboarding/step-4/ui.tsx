@@ -21,7 +21,7 @@ export default function OnboardingStep4() {
   const s = useStep4Logic();
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white relative overflow-hidden">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white relative overflow-hidden">
       {/* ═══ Background layer (blurs when location modal is open) ═══ */}
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ${
@@ -36,15 +36,15 @@ export default function OnboardingStep4() {
         <main className="px-6 flex-grow max-w-md mx-auto w-full pb-48">
           {/* ── Progress Bar ── */}
           <div className="py-4">
-            <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3 lowercase">
+            <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3">
               <span>
-                step {CURRENT_STEP}/{TOTAL_STEPS}
+                Step {CURRENT_STEP}/{TOTAL_STEPS}
               </span>
-              <span>{PROGRESS_PCT}% complete</span>
+              <span>{PROGRESS_PCT}% Complete</span>
             </div>
             <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-black transition-all duration-500"
+                className="h-full bg-hushh-blue transition-all duration-500"
                 style={{ width: `${PROGRESS_PCT}%` }}
               />
             </div>
@@ -52,21 +52,21 @@ export default function OnboardingStep4() {
 
           {/* ── Title Section ── */}
           <section className="py-8">
-            <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">
-              verification
+            <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">
+              Verification
             </h3>
             <h1
-              className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight lowercase"
+              className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              confirm your
+              Confirm Your
               <br />
-              <span className="text-gray-400 italic font-normal">
-                residence
+              <span className="text-gray-400 italic font-light">
+                Residence
               </span>
             </h1>
-            <p className="text-sm text-gray-500 mt-4 leading-relaxed lowercase font-medium">
-              we need to know where you live and pay taxes to open your
+            <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
+              We need to know where you live and pay taxes to open your
               investment account.
             </p>
           </section>
@@ -75,19 +75,19 @@ export default function OnboardingStep4() {
           {s.locationStatus === "detecting" && (
             <div className="flex items-center gap-3 py-4 px-1 mb-4 border-b border-gray-100">
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <div className="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full" />
+                <div className="animate-spin h-5 w-5 border-2 border-hushh-blue border-t-transparent rounded-full" />
               </div>
-              <p className="text-sm font-medium text-gray-700 lowercase">
-                detecting your location...
+              <p className="text-sm font-medium text-gray-700">
+                Detecting your location...
               </p>
             </div>
           )}
 
           {s.isSuccessStatus && (
             <div className="flex items-center gap-4 py-5 px-1 mb-6 border-b border-gray-100">
-              <div className="w-10 h-10 rounded-full bg-green-50 border border-green-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-ios-green/10 border border-ios-green/20 flex items-center justify-center shrink-0">
                 <span
-                  className="material-symbols-outlined text-green-600 text-lg"
+                  className="material-symbols-outlined text-ios-green text-lg"
                   style={{
                     fontVariationSettings: "'FILL' 1, 'wght' 600",
                   }}
@@ -96,10 +96,10 @@ export default function OnboardingStep4() {
                 </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900 lowercase">
-                  location detected
+                <p className="text-sm font-semibold text-gray-900">
+                  Location Detected
                 </p>
-                <p className="text-xs text-gray-500 lowercase font-medium">
+                <p className="text-xs text-gray-500 font-medium">
                   {s.detectedLocation}
                 </p>
               </div>
@@ -120,10 +120,10 @@ export default function OnboardingStep4() {
                       error
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-gray-700 lowercase">
+                  <p className="text-sm font-medium text-gray-700">
                     {s.locationStatus === "denied"
-                      ? "location access denied"
-                      : "could not detect location"}
+                      ? "Location access denied"
+                      : "Could not detect location"}
                   </p>
                 </div>
                 <button
@@ -139,9 +139,9 @@ export default function OnboardingStep4() {
                     e.preventDefault();
                     s.setShowPermissionHelp(true);
                   }}
-                  className="mt-2 ml-14 text-[11px] font-semibold text-gray-500 hover:text-black transition-colors lowercase underline"
+                  className="mt-2 ml-14 text-[11px] font-semibold text-gray-500 hover:text-hushh-blue transition-colors underline"
                 >
-                  how to enable location
+                  How to enable location
                 </button>
               )}
             </div>
@@ -162,8 +162,8 @@ export default function OnboardingStep4() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 lowercase mb-0.5">
-                      country of citizenship
+                    <p className="text-sm font-semibold text-gray-900 mb-0.5">
+                      Country of Citizenship
                     </p>
                     <div className="relative">
                       <select
@@ -172,11 +172,11 @@ export default function OnboardingStep4() {
                           s.handleCitizenshipChange(e.target.value)
                         }
                         disabled={s.isDetectingLocation}
-                        className="w-full text-xs text-gray-500 font-medium lowercase bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 p-0"
+                        className="w-full text-xs text-gray-500 font-medium bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 p-0"
                         aria-label="Select citizenship country"
                       >
                         <option disabled value="">
-                          select country
+                          Select Country
                         </option>
                         {countries.map((c) => (
                           <option key={c} value={c}>
@@ -204,8 +204,8 @@ export default function OnboardingStep4() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 lowercase mb-0.5">
-                      country of residence
+                    <p className="text-sm font-semibold text-gray-900 mb-0.5">
+                      Country of Residence
                     </p>
                     <div className="relative">
                       <select
@@ -214,11 +214,11 @@ export default function OnboardingStep4() {
                           s.handleResidenceChange(e.target.value)
                         }
                         disabled={s.isDetectingLocation}
-                        className="w-full text-xs text-gray-500 font-medium lowercase bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 p-0"
+                        className="w-full text-xs text-gray-500 font-medium bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 p-0"
                         aria-label="Select residence country"
                       >
                         <option disabled value="">
-                          select country
+                          Select Country
                         </option>
                         {countries.map((c) => (
                           <option key={c} value={c}>
@@ -241,7 +241,7 @@ export default function OnboardingStep4() {
                   <div className="pt-4">
                     <button
                       onClick={s.handleConfirmManualSelection}
-                      className="w-full py-3 text-xs font-bold uppercase tracking-widest text-black border border-black hover:bg-black hover:text-white transition-all active:scale-[0.98]"
+                      className="w-full py-3 text-xs font-bold uppercase tracking-widest text-hushh-blue border border-hushh-blue rounded-2xl hover:bg-hushh-blue hover:text-white transition-all active:scale-[0.98]"
                     >
                       Confirm Selection
                     </button>
@@ -269,11 +269,11 @@ export default function OnboardingStep4() {
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 lowercase">
-                      detect my location
+                    <p className="text-sm font-semibold text-gray-900">
+                      Detect My Location
                     </p>
-                    <p className="text-xs text-gray-500 lowercase font-medium">
-                      auto-fill country using gps
+                    <p className="text-xs text-gray-500 font-medium">
+                      Auto-fill country using GPS
                     </p>
                   </div>
                 </button>
@@ -307,11 +307,11 @@ export default function OnboardingStep4() {
           {/* ── Trust Badges ── */}
           <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
             <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[12px] text-gray-600">
+              <span className="material-symbols-outlined text-[12px] text-hushh-blue">
                 lock
               </span>
-              <span className="text-[10px] text-gray-600 tracking-wide uppercase font-medium">
-                256 bit encryption
+              <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">
+                256 Bit Encryption
               </span>
             </div>
           </section>
@@ -342,13 +342,13 @@ export default function OnboardingStep4() {
               {/* Heading & description */}
               <div className="space-y-4 mb-10 px-2">
                 <h2
-                  className="text-[1.75rem] leading-[1.2] text-black lowercase tracking-tight"
+                  className="text-[1.75rem] leading-[1.2] text-black tracking-tight font-serif"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  enable location access
+                  Enable Location Access
                 </h2>
-                <p className="text-gray-500 text-[0.85rem] leading-relaxed font-normal lowercase max-w-[90%] mx-auto">
-                  hushh uses your location to automatically determine your
+                <p className="text-gray-500 text-[0.85rem] leading-relaxed font-light max-w-[90%] mx-auto">
+                  Hushh uses your location to automatically determine your
                   country and streamline the secure verification process.
                 </p>
               </div>
@@ -358,7 +358,7 @@ export default function OnboardingStep4() {
                 {/* Allow while using app — primary black */}
                 <button
                   onClick={s.handleAllowLocation}
-                  className="w-full h-12 bg-black text-white font-medium text-[0.8rem] flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-[0.99] border border-black hover:bg-black/90"
+                  className="w-full h-12 bg-hushh-blue text-white font-medium text-[0.8rem] flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-[0.99] border border-hushh-blue rounded-2xl hover:bg-hushh-blue/90"
                 >
                   Allow while using app
                 </button>
@@ -366,7 +366,7 @@ export default function OnboardingStep4() {
                 {/* Allow once — outlined */}
                 <button
                   onClick={s.handleAllowLocation}
-                  className="w-full h-12 border border-black bg-white text-black font-medium text-[0.8rem] hover:bg-gray-50 transition-colors active:scale-[0.99]"
+                  className="w-full h-12 border border-gray-200 bg-white text-black font-medium text-[0.8rem] rounded-2xl hover:bg-gray-50 transition-colors active:scale-[0.99]"
                 >
                   Allow once
                 </button>

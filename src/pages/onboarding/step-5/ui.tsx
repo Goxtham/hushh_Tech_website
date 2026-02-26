@@ -51,7 +51,7 @@ export default function OnboardingStep5() {
   } = useStep5Logic();
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white relative overflow-hidden">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white relative overflow-hidden">
       {/* ═══ Background layer (blurs when dial picker is open) ═══ */}
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ${
@@ -66,15 +66,15 @@ export default function OnboardingStep5() {
         <main className="px-6 flex-grow max-w-md mx-auto w-full pb-48">
           {/* ── Progress Bar ── */}
           <div className="py-4">
-            <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3 lowercase">
+            <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3">
               <span>
-                step {CURRENT_STEP}/{TOTAL_STEPS}
+                Step {CURRENT_STEP}/{TOTAL_STEPS}
               </span>
-              <span>{PROGRESS_PCT}% complete</span>
+              <span>{PROGRESS_PCT}% Complete</span>
             </div>
             <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-black transition-all duration-500"
+                className="h-full bg-hushh-blue transition-all duration-500"
                 style={{ width: `${PROGRESS_PCT}%` }}
               />
             </div>
@@ -82,27 +82,27 @@ export default function OnboardingStep5() {
 
           {/* ── Title Section ── */}
           <section className="py-8">
-            <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">
-              account setup
+            <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">
+              Account Setup
             </h3>
             <h1
-              className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight lowercase"
+              className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              a few more
+              A Few More
               <br />
-              <span className="text-gray-400 italic font-normal">details</span>
+              <span className="text-gray-400 italic font-light">Details</span>
             </h1>
-            <p className="text-sm text-gray-500 mt-4 leading-relaxed lowercase font-medium">
-              this helps us personalize your account and keep your profile
+            <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
+              This helps us personalize your account and keep your profile
               secure.
             </p>
           </section>
 
           {/* ── Account Type Selection ── */}
           <section className="mb-10">
-            <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">
-              account type
+            <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">
+              Account Type
             </h3>
             <div className="space-y-0">
               {ACCOUNT_TYPE_OPTIONS.map((option, index) => {
@@ -125,7 +125,7 @@ export default function OnboardingStep5() {
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
                         isSelected
-                          ? "bg-black"
+                          ? "bg-hushh-blue"
                           : "bg-gray-100 group-hover:bg-gray-200"
                       }`}
                     >
@@ -141,17 +141,17 @@ export default function OnboardingStep5() {
 
                     {/* Label */}
                     <span
-                      className={`text-sm lowercase font-semibold flex-1 ${
+                      className={`text-sm font-semibold flex-1 ${
                         isSelected ? "text-black" : "text-gray-700"
                       }`}
                     >
-                      {option.label.toLowerCase()}
+                      {option.label}
                     </span>
 
                     {/* Checkmark */}
                     {isSelected && (
                       <span
-                        className="material-symbols-outlined text-black text-lg shrink-0"
+                        className="material-symbols-outlined text-hushh-blue text-lg shrink-0"
                         style={{
                           fontVariationSettings: "'FILL' 1, 'wght' 600",
                         }}
@@ -168,17 +168,17 @@ export default function OnboardingStep5() {
           {/* ── Phone Number ── */}
           <section className="mb-12">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[11px] tracking-wide text-gray-500 lowercase font-semibold">
-                phone number
+              <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase font-medium">
+                Phone Number
               </h3>
               {isAutoDetectingDialCode && (
-                <span className="text-[10px] font-medium text-gray-400 lowercase">
-                  detecting...
+                <span className="text-[10px] font-medium text-gray-400">
+                  Detecting...
                 </span>
               )}
             </div>
-            <p className="text-xs text-gray-400 lowercase font-medium mb-5">
-              we&apos;ll use this to verify your identity when needed.
+            <p className="text-xs text-gray-400 font-light mb-5">
+              We&apos;ll use this to verify your identity when needed.
             </p>
 
             {/* Phone input row */}
@@ -234,14 +234,14 @@ export default function OnboardingStep5() {
                 >
                   verified
                 </span>
-                <span className="text-[10px] text-green-700 font-medium lowercase">
-                  pre-filled from your bank · tap to edit
+                <span className="text-[10px] text-ios-green font-medium">
+                  Pre-filled from your bank · tap to edit
                 </span>
               </div>
             )}
 
-            <p className="text-[10px] text-gray-400 mt-2 lowercase font-medium">
-              standard message and data rates may apply.
+            <p className="text-[10px] text-gray-400 mt-2 font-light">
+              Standard message and data rates may apply.
             </p>
           </section>
 
@@ -266,11 +266,11 @@ export default function OnboardingStep5() {
           {/* ── Trust Badges ── */}
           <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
             <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[12px] text-gray-600">
+              <span className="material-symbols-outlined text-[12px] text-hushh-blue">
                 lock
               </span>
-              <span className="text-[10px] text-gray-600 tracking-wide uppercase font-medium">
-                256 bit encryption
+              <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">
+                256 Bit Encryption
               </span>
             </div>
           </section>
@@ -292,10 +292,10 @@ export default function OnboardingStep5() {
               {/* Header */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100">
                 <h2
-                  className="text-xl text-black lowercase tracking-tight"
+                  className="text-xl text-black tracking-tight font-serif"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  select country code
+                  Select Country Code
                 </h2>
                 <button
                   onClick={() => setShowDialPicker(false)}
@@ -332,8 +332,8 @@ export default function OnboardingStep5() {
                           }}
                           aria-label={option.country}
                         />
-                        <span className="text-sm font-medium text-gray-900 lowercase">
-                          {option.country.toLowerCase()}
+                        <span className="text-sm font-medium text-gray-900">
+                          {option.country}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
