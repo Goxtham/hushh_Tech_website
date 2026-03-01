@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS hushh_agents_users (
   total_tokens_used INTEGER DEFAULT 0,          -- Total AI tokens consumed
   -- Preferences
   preferred_language TEXT DEFAULT 'en-US',
-  subscription_tier TEXT DEFAULT 'limited' CHECK (tier IN ('limited', 'pro')),
+  subscription_tier TEXT DEFAULT 'limited' CHECK (subscription_tier IN ('limited', 'pro')),
   -- Metadata
   device_info JSONB DEFAULT '{}',               -- Browser, OS, etc.
   referral_source TEXT,                         -- Where they came from
@@ -32,10 +32,7 @@ CREATE TABLE IF NOT EXISTS hushh_agents_users (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Fix constraint name for tier
-ALTER TABLE hushh_agents_users DROP CONSTRAINT IF EXISTS hushh_agents_users_tier_check;
-ALTER TABLE hushh_agents_users ADD CONSTRAINT hushh_agents_users_subscription_tier_check 
-  CHECK (subscription_tier IN ('limited', 'pro'));
+-- Constraint is already defined inline above
 
 -- ═══════════════════════════════════════════════════════════
 -- TABLE 2: Sessions - Track Each Visit
