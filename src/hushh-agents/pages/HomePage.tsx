@@ -171,11 +171,11 @@ export default function AgentsHomePage() {
             style={{ 
               background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B00 100%)',
             }}
-            onClick={() => navigate('/hushh-agents/chat?lang=ta-IN&voice=true')}
+            onClick={() => navigate('/hushh-agents/voice?lang=ta-IN')}
             role="button"
             tabIndex={0}
             aria-label="Start Tamil voice conversation"
-            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/hushh-agents/chat?lang=ta-IN&voice=true'); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/hushh-agents/voice?lang=ta-IN'); }}
           >
             {/* Animated glow */}
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse" />

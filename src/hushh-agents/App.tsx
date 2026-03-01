@@ -20,6 +20,7 @@ import HushhLogo from '../components/images/Hushhogo.png';
 // Lazy load pages
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
+const VoicePage = lazy(() => import('./pages/VoicePage'));
 
 // Playfair heading style
 const playfair = { fontFamily: "'Playfair Display', serif" };
@@ -245,13 +246,19 @@ const App: React.FC = () => {
         {/* Home - Agent Selection */}
         <Route
           index
-          element={<HomePage user={user} onSignOut={signOut} />}
+          element={<HomePage />}
+        />
+
+        {/* Voice Assistant - Tamil/Hindi/English */}
+        <Route
+          path="voice"
+          element={<VoicePage />}
         />
 
         {/* Chat with specific agent */}
         <Route
           path="chat/:agentId"
-          element={<ChatPage user={user} />}
+          element={<ChatPage />}
         />
 
         {/* Default chat (Hushh agent) */}
