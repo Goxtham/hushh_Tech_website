@@ -334,6 +334,72 @@ export default function AgentsHomePage() {
           </div>
         </section>
 
+        {/* ═══ Kirkland Agents — Directory Card ═══ */}
+        <section className="py-6">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-2 font-medium">Agent Directory</p>
+          <h2 className="text-xl md:text-2xl font-medium mb-4 tracking-tight font-serif" style={playfair}>
+            Kirkland Agents
+          </h2>
+
+          <div
+            className="group bg-gradient-to-br from-blue-50 to-indigo-50 p-6 md:p-8 rounded-2xl relative overflow-hidden shadow-sm border border-blue-100 cursor-pointer hover:shadow-lg transition-all duration-300"
+            onClick={() => navigate('/hushh-agents/kirkland')}
+            role="button"
+            tabIndex={0}
+            aria-label="Browse Kirkland Agents Directory"
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/hushh-agents/kirkland'); }}
+          >
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl group-hover:bg-blue-400/20 transition-colors" />
+
+            <div className="relative z-10 flex flex-col gap-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-3xl md:text-4xl text-white">location_city</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-medium tracking-widest uppercase text-gray-500 block">
+                      Local Directory • 771 Agents
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-medium text-gray-900 font-serif" style={playfair}>
+                      Kirkland Agents
+                    </h2>
+                  </div>
+                </div>
+                <span className="bg-blue-500/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider border border-blue-300/30 text-blue-600">
+                  Live
+                </span>
+              </div>
+
+              <p className="text-gray-600 text-sm font-light leading-relaxed">
+                Browse and discover 771+ local agents in the Kirkland area. 
+                Search by name, category, or location. View ratings, contact info, and get directions.
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                {['Search', 'Filter', 'Ratings', 'Directions'].map((cap) => (
+                  <span
+                    key={cap}
+                    className="px-3 py-1.5 bg-blue-500/10 border border-blue-300/20 rounded-full text-[10px] font-medium uppercase tracking-wider text-blue-600"
+                  >
+                    {cap}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-blue-500 text-lg">star</span>
+                  <span className="text-xs text-gray-500">Top 10 recommended agents highlighted</span>
+                </div>
+                <span className="material-symbols-outlined text-blue-400 group-hover:translate-x-1 transition-transform">
+                  arrow_forward
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Features Grid ── */}
         <section className="py-8">
           <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-2 font-medium">Features</p>

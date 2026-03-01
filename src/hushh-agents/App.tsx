@@ -22,6 +22,8 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 const VoicePage = lazy(() => import('./pages/VoicePage'));
 const CodePage = lazy(() => import('./pages/CodePage'));
+const KirklandAgentsPage = lazy(() => import('./pages/KirklandAgentsPage'));
+const AgentDetailPage = lazy(() => import('./pages/AgentDetailPage'));
 
 // Playfair heading style
 const playfair = { fontFamily: "'Playfair Display', serif" };
@@ -256,10 +258,22 @@ const App: React.FC = () => {
           element={<VoicePage />}
         />
 
-        {/* Code Generation - Claude Opus 4.5 */}
+        {/* Code Generation */}
         <Route
           path="code"
           element={<CodePage />}
+        />
+
+        {/* Kirkland Agents - Listing */}
+        <Route
+          path="kirkland"
+          element={<KirklandAgentsPage />}
+        />
+
+        {/* Kirkland Agent - Detail */}
+        <Route
+          path="kirkland/:agentId"
+          element={<AgentDetailPage />}
         />
 
         {/* Chat with specific agent */}
