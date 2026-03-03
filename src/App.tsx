@@ -241,9 +241,11 @@ function App() {
             <Route path="/community" element={
               <CommunityPage />
             } />
-            {/* Community Events — standalone registration page */}
+            {/* Community Events — requires login */}
             <Route path="/community/events" element={
-              <CommunityEventsPage />
+              <ProtectedRoute>
+                <CommunityEventsPage />
+              </ProtectedRoute>
             } />
             <Route path='/california-privacy-policy' element={<CaliforniaPrivacyPolicy />} />
             <Route path='/eu-uk-jobs-privacy-policy' element={<EUUKPrivacyPolicy />} />
