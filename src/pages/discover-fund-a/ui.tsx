@@ -159,7 +159,7 @@ const FundA = () => {
       />
 
       {/* ═══ Main ═══ */}
-      <main className="px-6 flex-grow max-w-md mx-auto w-full pb-32">
+      <main className="px-6 md:px-10 flex-grow max-w-md md:max-w-3xl lg:max-w-5xl mx-auto w-full pb-32">
         {/* ── Hero ── */}
         <section className="pt-6 pb-8">
           {/* pill badge */}
@@ -171,14 +171,14 @@ const FundA = () => {
           </div>
 
           <h1
-            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight"
+            className="text-[2.75rem] md:text-[3.5rem] lg:text-[4rem] leading-[1.1] font-normal text-black tracking-tight"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
             {heroTitle} <br />
             <span className="text-gray-400 italic font-light">{heroSubtitle}</span>
           </h1>
 
-          <p className="text-[13px] text-gray-400 font-light mt-4 leading-relaxed max-w-xs">
+          <p className="text-[13px] md:text-sm text-gray-400 font-light mt-4 leading-relaxed max-w-xs md:max-w-md">
             {heroDescription}
           </p>
         </section>
@@ -210,7 +210,7 @@ const FundA = () => {
 
         {/* ── Investment Philosophy ── */}
         <SectionLabel>{philosophySectionTitle}</SectionLabel>
-        <div className="space-y-3 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
           {philosophyCards.map((card) => (
             <FeatureCard
               key={card.title}
@@ -235,7 +235,7 @@ const FundA = () => {
           </a>{" "}
           Framework
         </SectionLabel>
-        <div className="space-y-3 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
           {edgeCards.map((card) => (
             <FeatureCard
               key={card.title}
@@ -252,7 +252,7 @@ const FundA = () => {
         <p className="text-[11px] text-gray-400 font-light leading-relaxed mb-4">
           {assetFocusDescription}
         </p>
-        <div className="space-y-3 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
           {assetPillars.map((pillar) => (
             <FeatureCard
               key={pillar.title}
@@ -298,7 +298,7 @@ const FundA = () => {
 
         {/* ── Risk Management ── */}
         <SectionLabel>{riskSectionTitle}</SectionLabel>
-        <div className="space-y-3 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
           {riskCards.map((card) => (
             <FeatureCard
               key={card.title}
@@ -329,7 +329,7 @@ const FundA = () => {
 
         {/* Share Classes (compact cards) */}
         <SectionLabel>Share Classes</SectionLabel>
-        <div className="space-y-3 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
           {shareClasses.map((sc) => (
             <div
               key={sc.shareClass}
@@ -392,18 +392,20 @@ const FundA = () => {
         </div>
 
         {/* ── Join / CTA ── */}
-        <section className="border-t border-gray-200 pt-8 mb-8">
-          <h2
-            className="text-[22px] font-medium text-black tracking-tight mb-2"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            {joinSectionTitle}
-          </h2>
-          <p className="text-[13px] text-gray-400 font-light leading-relaxed mb-8 max-w-xs">
-            {joinSectionDescription}
-          </p>
+        <section className="border-t border-gray-200 pt-8 mb-8 md:flex md:items-start md:justify-between md:gap-12">
+          <div className="md:flex-1">
+            <h2
+              className="text-[22px] md:text-[28px] font-medium text-black tracking-tight mb-2"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              {joinSectionTitle}
+            </h2>
+            <p className="text-[13px] md:text-sm text-gray-400 font-light leading-relaxed mb-8 md:mb-0 max-w-xs md:max-w-md">
+              {joinSectionDescription}
+            </p>
+          </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 md:flex md:gap-3 md:space-y-0 md:shrink-0">
             <HushhTechCta
               variant={HushhTechCtaVariant.BLACK}
               onClick={handleCompleteProfile}
@@ -424,7 +426,7 @@ const FundA = () => {
 
         {/* ── Disclaimer ── */}
         <p
-          className="text-[9px] text-gray-400 text-center leading-relaxed italic max-w-xs mx-auto mb-4"
+          className="text-[9px] md:text-[10px] text-gray-400 text-center leading-relaxed italic max-w-xs md:max-w-md mx-auto mb-4"
           style={{ fontFamily: "'Playfair Display', serif" }}
         >
           Investing involves risk, including possible loss of principal. Past
