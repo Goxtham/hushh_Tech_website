@@ -57,7 +57,7 @@ const FundAIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => {
 const TAB_ROUTES: Record<HushhFooterTab, string> = {
   [HushhFooterTab.HOME]: "/",
   [HushhFooterTab.FUND_A]: "/discover-fund-a",
-  [HushhFooterTab.COMMUNITY]: "/community",
+  [HushhFooterTab.COMMUNITY]: "/community/events",
   [HushhFooterTab.PROFILE]: "/profile",
 };
 
@@ -80,12 +80,12 @@ const HushhTechFooter: React.FC<HushhTechFooterProps> = ({
     }
   };
 
-  /** Handle logo click — use parent callback if provided, else go to community events */
+  /** Handle logo click — use parent callback if provided, else go to community blog */
   const handleLogoClick = () => {
     if (onLogoClick) {
       onLogoClick();
     } else {
-      navigate("/community/events");
+      navigate("/community");
     }
   };
 
