@@ -337,6 +337,22 @@ export default function OnboardingStep4() {
                         autoComplete="address-line1"
                       />
                     </div>
+                    {/* Refresh icon — re-detect GPS */}
+                    <button
+                      type="button"
+                      onClick={s.handleRetry}
+                      disabled={s.isDetectingLocation}
+                      className="w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center shrink-0 transition-colors disabled:opacity-40"
+                      aria-label="Re-detect address line 1"
+                      title="Re-detect from GPS"
+                    >
+                      <span
+                        className={`material-symbols-outlined text-gray-500 text-[16px] ${s.isDetectingLocation ? 'animate-spin' : ''}`}
+                        style={{ fontVariationSettings: "'wght' 400" }}
+                      >
+                        refresh
+                      </span>
+                    </button>
                   </div>
                 </div>
 
@@ -368,6 +384,22 @@ export default function OnboardingStep4() {
                         autoComplete="address-line2"
                       />
                     </div>
+                    {/* Refresh icon — re-detect GPS */}
+                    <button
+                      type="button"
+                      onClick={s.handleRetry}
+                      disabled={s.isDetectingLocation}
+                      className="w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center shrink-0 transition-colors disabled:opacity-40"
+                      aria-label="Re-detect address line 2"
+                      title="Re-detect from GPS"
+                    >
+                      <span
+                        className={`material-symbols-outlined text-gray-500 text-[16px] ${s.isDetectingLocation ? 'animate-spin' : ''}`}
+                        style={{ fontVariationSettings: "'wght' 400" }}
+                      >
+                        refresh
+                      </span>
+                    </button>
                   </div>
                 </div>
               </section>
@@ -376,40 +408,80 @@ export default function OnboardingStep4() {
               <section className="space-y-0 mb-6">
                 {/* Country */}
                 <div className="border-b border-gray-200">
-                  <SearchableSelect
-                    id="addressCountry"
-                    label="Country"
-                    value={s.dropdowns.country}
-                    options={s.dropdowns.countries.map((c) => ({
-                      value: c.isoCode,
-                      label: c.name,
-                    }))}
-                    onChange={s.dropdowns.setCountry}
-                    placeholder="Search country..."
-                    required
-                    autoComplete="country"
-                  />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <SearchableSelect
+                        id="addressCountry"
+                        label="Country"
+                        value={s.dropdowns.country}
+                        options={s.dropdowns.countries.map((c) => ({
+                          value: c.isoCode,
+                          label: c.name,
+                        }))}
+                        onChange={s.dropdowns.setCountry}
+                        placeholder="Search country..."
+                        required
+                        autoComplete="country"
+                      />
+                    </div>
+                    {/* Refresh icon — re-detect GPS */}
+                    <button
+                      type="button"
+                      onClick={s.handleRetry}
+                      disabled={s.isDetectingLocation}
+                      className="w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center shrink-0 transition-colors disabled:opacity-40 mt-6"
+                      aria-label="Re-detect country"
+                      title="Re-detect from GPS"
+                    >
+                      <span
+                        className={`material-symbols-outlined text-gray-500 text-[16px] ${s.isDetectingLocation ? 'animate-spin' : ''}`}
+                        style={{ fontVariationSettings: "'wght' 400" }}
+                      >
+                        refresh
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* State */}
                 <div className="border-b border-gray-200">
-                  <SearchableSelect
-                    id="addressState"
-                    label="State / Province"
-                    value={s.dropdowns.state}
-                    options={s.dropdowns.states.map((st) => ({
-                      value: st.isoCode,
-                      label: st.name,
-                    }))}
-                    onChange={s.dropdowns.setState}
-                    placeholder="Search state..."
-                    disabled={!s.dropdowns.country}
-                    loading={s.dropdowns.loadingStates}
-                    loadError={s.dropdowns.statesError}
-                    onRetry={s.dropdowns.retryStates}
-                    required
-                    autoComplete="address-level1"
-                  />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <SearchableSelect
+                        id="addressState"
+                        label="State / Province"
+                        value={s.dropdowns.state}
+                        options={s.dropdowns.states.map((st) => ({
+                          value: st.isoCode,
+                          label: st.name,
+                        }))}
+                        onChange={s.dropdowns.setState}
+                        placeholder="Search state..."
+                        disabled={!s.dropdowns.country}
+                        loading={s.dropdowns.loadingStates}
+                        loadError={s.dropdowns.statesError}
+                        onRetry={s.dropdowns.retryStates}
+                        required
+                        autoComplete="address-level1"
+                      />
+                    </div>
+                    {/* Refresh icon — re-detect GPS */}
+                    <button
+                      type="button"
+                      onClick={s.handleRetry}
+                      disabled={s.isDetectingLocation}
+                      className="w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center shrink-0 transition-colors disabled:opacity-40 mt-6"
+                      aria-label="Re-detect state"
+                      title="Re-detect from GPS"
+                    >
+                      <span
+                        className={`material-symbols-outlined text-gray-500 text-[16px] ${s.isDetectingLocation ? 'animate-spin' : ''}`}
+                        style={{ fontVariationSettings: "'wght' 400" }}
+                      >
+                        refresh
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* ZIP Code */}
@@ -442,6 +514,22 @@ export default function OnboardingStep4() {
                         autoComplete="postal-code"
                       />
                     </div>
+                    {/* Refresh icon — re-detect GPS */}
+                    <button
+                      type="button"
+                      onClick={s.handleRetry}
+                      disabled={s.isDetectingLocation}
+                      className="w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center shrink-0 transition-colors disabled:opacity-40"
+                      aria-label="Re-detect ZIP code"
+                      title="Re-detect from GPS"
+                    >
+                      <span
+                        className={`material-symbols-outlined text-gray-500 text-[16px] ${s.isDetectingLocation ? 'animate-spin' : ''}`}
+                        style={{ fontVariationSettings: "'wght' 400" }}
+                      >
+                        refresh
+                      </span>
+                    </button>
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-400 pl-14 pt-1 font-light">
