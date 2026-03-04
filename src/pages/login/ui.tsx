@@ -64,8 +64,8 @@ export default function LoginPage() {
             onClick={handleAppleSignIn}
             disabled={isSigningIn}
           >
-            <FaApple className="text-lg" />
-            <span>Continue with Apple</span>
+            <FaApple className="text-lg shrink-0" />
+            <span className="truncate">Continue with Apple</span>
           </HushhTechCta>
 
           <HushhTechCta
@@ -73,8 +73,8 @@ export default function LoginPage() {
             onClick={handleGoogleSignIn}
             disabled={isSigningIn}
           >
-            <FcGoogle className="text-lg" />
-            <span>Continue with Google</span>
+            <FcGoogle className="text-lg shrink-0" />
+            <span className="truncate">Continue with Google</span>
           </HushhTechCta>
         </section>
 

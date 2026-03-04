@@ -41,9 +41,9 @@ const VARIANT_CLASSES: Record<HushhTechCtaVariant, string> = {
 
 /** Base classes shared by both variants — always full-width, consistent height */
 const BASE_CLASSES = [
-  "w-full h-14 px-8 rounded-xl",
-  "font-semibold text-sm tracking-wide whitespace-nowrap capitalize",
-  "flex items-center justify-center gap-2",
+  "w-full min-h-[3.5rem] px-4 sm:px-8 rounded-xl",
+  "font-semibold text-sm tracking-wide capitalize",
+  "flex items-center justify-center gap-2 flex-nowrap",
   "disabled:opacity-50 disabled:cursor-not-allowed",
 ].join(" ");
 
