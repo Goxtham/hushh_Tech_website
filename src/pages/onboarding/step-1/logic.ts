@@ -93,7 +93,18 @@ export const useStep1Logic = (): Step1Logic => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [customAmountError, setCustomAmountError] = useState<string | null>(null);
-  const [recurringEnabled, setRecurringEnabled] = useState(false);
+  const [recurringEnabled, setRecurringEnabledRaw] = useState(false);
+
+  /* When recurring is toggled OFF, clear recurring-related state */
+  const setRecurringEnabled = (enabled: boolean) => {
+    setRecurringEnabledRaw(enabled);
+    if (!enabled) {
+      setSelectedAmount(null);
+      setCustomAmount('');
+      setCustomAmountError(null);
+      setError(null);
+    }
+  };
 
   const totalInvestment = SHARE_CLASSES.reduce((t, sc) => t + units[sc.id] * sc.unitPrice, 0);
   const hasSelection = Object.values(units).some((c) => c > 0);
@@ -187,7 +198,8 @@ export const useStep1Logic = (): Step1Logic => {
 
   const handleNext = async () => {
     if (!userId || !config.supabaseClient || !hasSelection) return;
-    if (customAmountError) { setError(customAmountError); return; }
+    /* Only block on custom amount error when recurring is active */
+    if (recurringEnabled && customAmountError) { setError(customAmountError); return; }
 
     /* When recurring is ON, validate that user picked a valid amount */
     if (recurringEnabled) {
