@@ -339,12 +339,12 @@ function MeetCeoPage() {
                     <input
                       type="text" value={couponCode} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(null); }}
                       placeholder="enter coupon code"
-                      className="flex-1 h-12 px-4 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-black focus:ring-1 focus:ring-black font-mono tracking-widest lowercase"
+                      className="flex-1 h-12 px-4 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-black focus:ring-1 focus:ring-black font-mono tracking-widest uppercase"
                       autoCapitalize="characters" autoComplete="off"
                     />
                     <button onClick={handleCouponRedeem} disabled={couponLoading || !couponCode.trim()}
                       className="h-12 px-5 rounded-xl bg-black text-white text-sm font-semibold disabled:bg-gray-300 active:scale-[0.97] transition-all">
-                      {couponLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'apply'}
+                      {couponLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'APPLY'}
                     </button>
                   </div>
                   {couponError && <p className="text-xs text-red-500 text-center font-medium lowercase">{couponError}</p>}
