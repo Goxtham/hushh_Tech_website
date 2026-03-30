@@ -158,11 +158,26 @@ export const useStep4Logic = (): Step4Logic => {
   useEffect(() => { residenceCountryRef.current = residenceCountry; }, [residenceCountry]);
 
   const applyDetectedLocation = (locationData: LocationData, status: LocationStatus) => {
+    const countryName = COUNTRY_CODE_TO_NAME[locationData.countryCode] || locationData.country;
+    const matchedCountry = countries.includes(countryName) ? countryName : '';
+
+    // Pre-populate citizenship country from GPS if the user hasn't picked one yet
+    if (!citizenshipCountryRef.current && matchedCountry) {
+      citizenshipCountryRef.current = matchedCountry;
+      setCitizenshipCountry(matchedCountry);
+    }
+
+    // Pre-populate residence country from GPS if the user hasn't picked one yet
+    if (!residenceCountryRef.current && matchedCountry) {
+      residenceCountryRef.current = matchedCountry;
+      setResidenceCountry(matchedCountry);
+    }
+
     setDetectedLocation(
       locationData.formattedAddress ||
       locationData.city ||
       locationData.state ||
-      locationData.country
+      countryName
     );
     setLocationDetected(true);
     setLocationStatus(status);
@@ -235,7 +250,21 @@ export const useStep4Logic = (): Step4Logic => {
         setResidenceCountry(resolved.values.residence_country);
       }
 
+      // Fallback: if prefill didn't set countries but we have cached GPS data, extract country
       if (cachedLocation) {
+        const cachedCountryName =
+          COUNTRY_CODE_TO_NAME[cachedLocation.countryCode] || cachedLocation.country;
+        const matchedCached = countries.includes(cachedCountryName) ? cachedCountryName : '';
+
+        if (!citizenshipCountryRef.current && matchedCached) {
+          citizenshipCountryRef.current = matchedCached;
+          setCitizenshipCountry(matchedCached);
+        }
+        if (!residenceCountryRef.current && matchedCached) {
+          residenceCountryRef.current = matchedCached;
+          setResidenceCountry(matchedCached);
+        }
+
         setDetectedLocation(
           cachedLocation.formattedAddress ||
           cachedLocation.city ||
@@ -246,9 +275,24 @@ export const useStep4Logic = (): Step4Logic => {
         setLocationStatus(getStep4StatusFromCacheRecord(sharedCache) || 'ip-success');
       }
 
+      // Check geolocation permission before auto-detecting
       if (!autoDetectionStartedRef.current) {
         autoDetectionStartedRef.current = true;
-        void refreshLocation(user.id);
+
+        // If we already have cached location data, just refresh silently
+        if (cachedLocation) {
+          void refreshLocation(user.id);
+        } else {
+          // No cached data — check if browser permission is already granted
+          const permState = await checkGeoPermission();
+          if (permState === 'granted') {
+            // Permission already granted, detect silently
+            void refreshLocation(user.id);
+          } else {
+            // Permission not yet granted ('prompt') or denied — show our modal
+            setShowLocationModal(true);
+          }
+        }
       }
     };
     getCurrentUser();

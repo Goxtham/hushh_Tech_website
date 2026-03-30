@@ -233,8 +233,9 @@ export function useStep8Logic() {
             cachedLocation.formattedAddress,
             cachedLocation
           );
-          if (parsed.line1) setAddressLine1(parsed.line1);
-          if (parsed.line2) setAddressLine2(parsed.line2);
+          // Combine line1 + line2 into a single Address Line 1
+          const combined = [parsed.line1, parsed.line2].filter(Boolean).join(', ');
+          if (combined) setAddressLine1(combined);
         }
         // Also fill ZIP from GPS if not already set
         if (cachedLocation.postalCode && !resolved.values.zip_code) {

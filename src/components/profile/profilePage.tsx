@@ -266,8 +266,8 @@ const ProfilePage: React.FC = () => {
     if (onboardingStatus.currentStep > 1) {
       const cta = getContinueOnboardingCta(onboardingStatus.currentStep);
       return { 
-        text: cta.text,
-        action: () => navigate(cta.route)
+        text: cta.text, 
+        action: () => navigate(cta.route) 
       };
     }
     return { 
