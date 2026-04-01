@@ -200,164 +200,6 @@ const MainContent = ({ activeSection }: { activeSection: string }) => {
 
       {/* Accordions */}
       <Accordion allowMultiple defaultIndex={[0]}>
-        {/* App Store Guide */}
-        <AccordionItem 
-          border="1px solid" 
-          borderColor="gray.200" 
-          borderRadius="xl" 
-          mb={4}
-          overflow="hidden"
-          bg="white"
-          boxShadow="sm"
-        >
-          <AccordionButton 
-            py={5} 
-            px={6} 
-            bg="gray.50"
-            _hover={{ bg: 'gray.100' }}
-            _expanded={{ bg: 'gray.50' }}
-          >
-            <HStack spacing={4} flex={1}>
-              <Flex 
-                w={10} 
-                h={10} 
-                borderRadius="full" 
-                bg="red.100" 
-                align="center" 
-                justify="center"
-                fontSize="2xl"
-              >
-                🍎
-              </Flex>
-              <VStack align="start" spacing={0}>
-                <Text fontWeight="bold" fontSize="lg" color="gray.900">
-                  How to Publish to App Store (iOS)
-                </Text>
-                <Text fontSize="sm" color="gray.500">
-                  For iPhone and iPad devices
-                </Text>
-              </VStack>
-            </HStack>
-            <AccordionIcon color="gray.400" />
-          </AccordionButton>
-          <AccordionPanel py={6} px={6} borderTop="1px solid" borderColor="gray.200">
-            <VStack align="stretch" spacing={6}>
-              <Step
-                number={1}
-                title="Apple Developer Account Required"
-                description="You need an Apple Developer account ($99/year). Register at developer.apple.com. Without this, you cannot upload apps to App Store."
-              />
-              <Step
-                number={2}
-                title="Run the iOS TestFlight Script"
-                description="This script (scripts/ios-testflight.sh) automates everything: builds web app, syncs to Capacitor, archives in Xcode, exports IPA, and uploads to TestFlight. Uses App Store Connect API with key ID 2P753XQ823."
-                code={`# One command to build and upload to TestFlight
-npm run ios:testflight
-
-# Script location: scripts/ios-testflight.sh
-# What it does:
-# 1. npm run build (builds React app)
-# 2. npx cap sync ios (copies to iOS project)
-# 3. Increments CURRENT_PROJECT_VERSION in project.pbxproj
-# 4. xcodebuild archive (creates .xcarchive)
-# 5. xcodebuild exportArchive (creates IPA)
-# 6. xcrun altool --upload-app (uploads to TestFlight)`}
-              />
-              <Step
-                number={3}
-                title="Wait for Apple Processing"
-                description="After upload, Apple processes the build (10-30 minutes). You'll receive an email when ready. Check TestFlight section in App Store Connect."
-              />
-              <Step
-                number={4}
-                title="Submit for Review"
-                description="Test with TestFlight, then submit to App Store review. Apple reviews in 1-2 days. Go to App Store tab > Submit for Review."
-              />
-            </VStack>
-          </AccordionPanel>
-        </AccordionItem>
-
-        {/* Android Guide */}
-        <AccordionItem 
-          border="1px solid" 
-          borderColor="gray.200" 
-          borderRadius="xl" 
-          mb={4}
-          overflow="hidden"
-          bg="white"
-          boxShadow="sm"
-        >
-          <AccordionButton 
-            py={5} 
-            px={6} 
-            bg="gray.50"
-            _hover={{ bg: 'gray.100' }}
-            _expanded={{ bg: 'gray.50' }}
-          >
-            <HStack spacing={4} flex={1}>
-              <Flex 
-                w={10} 
-                h={10} 
-                borderRadius="full" 
-                bg="green.100" 
-                align="center" 
-                justify="center"
-                fontSize="2xl"
-              >
-                🤖
-              </Flex>
-              <VStack align="start" spacing={0}>
-                <Text fontWeight="bold" fontSize="lg" color="gray.900">
-                  How to Build for Android
-                </Text>
-                <Text fontSize="sm" color="gray.500">
-                  For Samsung, Pixel, OnePlus, and all Android devices
-                </Text>
-              </VStack>
-            </HStack>
-            <AccordionIcon color="gray.400" />
-          </AccordionButton>
-          <AccordionPanel py={6} px={6} borderTop="1px solid" borderColor="gray.200">
-            <VStack align="stretch" spacing={6}>
-              <Step
-                number={1}
-                title="Install Android Studio"
-                description="Download Android Studio from developer.android.com. It's free and required for building Android apps. Also install Java JDK 17+."
-              />
-              <Step
-                number={2}
-                title="Build Web App and Sync to Capacitor"
-                description="First build the React web app, then copy it to the Android project using Capacitor sync command."
-                code={`# Build the React web app (creates dist/ folder)
-npm run build
-
-# Sync web assets to Android project
-npx cap sync android
-
-# This copies dist/ to android/app/src/main/assets/public/`}
-              />
-              <Step
-                number={3}
-                title="Create Signed AAB (App Bundle)"
-                description="Build a signed Android App Bundle (.aab) for Google Play. The keystore is at android/app/keystores/. Version is set in android/app/build.gradle (currently versionCode 11, versionName 1.0.8)."
-                code={`# Set JAVA_HOME to Android Studio's JDK
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-
-# Build signed release bundle
-cd android && ./gradlew bundleRelease
-
-# Output: android/app/build/outputs/bundle/release/app-release.aab
-# Size: ~115 MB`}
-              />
-              <Step
-                number={4}
-                title="Upload to Google Play Console"
-                description="Go to play.google.com/console. Create a new release and upload the .aab file. Start with 'Internal Testing' track, then promote to 'Open Testing' or 'Production'."
-              />
-            </VStack>
-          </AccordionPanel>
-        </AccordionItem>
-
         {/* React Guide */}
         <AccordionItem 
           border="1px solid" 
@@ -434,15 +276,16 @@ npm run preview
               />
               <Step
                 number={4}
-                title="Deploy to Vercel"
-                description="Push to GitHub and Vercel auto-deploys. Connected to main branch. Site: hushh.ai"
+                title="Deploy to Google Cloud"
+                description="Push to GitHub and GitHub Actions deploys to Cloud Run. main updates production, develop updates UAT."
                 code={`# Commit and push changes
 git add .
 git commit -m "Your commit message"
 git push
 
-# Vercel automatically deploys from GitHub
-# Check: vercel.com/dashboard for build status`}
+# Production deploys from main -> GitHub Actions -> Cloud Run
+# UAT deploys from develop -> GitHub Actions -> Cloud Run
+# Check status in GitHub Actions and Google Cloud Run revisions`}
               />
             </VStack>
           </AccordionPanel>

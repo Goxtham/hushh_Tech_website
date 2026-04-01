@@ -1,6 +1,3 @@
-import { Preferences } from '@capacitor/preferences';
-
-import { isNativeApp } from '../../utils/platform';
 import type { LocationCacheRecord, LocationData } from './types';
 
 const LOCATION_CACHE_PREFIX = 'hushh:onboarding:location:v1';
@@ -77,12 +74,6 @@ export const readLocationCache = async (
   const key = getLocationCacheKey(userId);
 
   try {
-    if (isNativeApp()) {
-      const { value } = await Preferences.get({ key });
-      if (!value) return null;
-      return normalizeCacheRecord(JSON.parse(value));
-    }
-
     if (typeof globalThis.localStorage === 'undefined') return null;
     const raw = globalThis.localStorage.getItem(key);
     if (!raw) return null;
@@ -98,13 +89,6 @@ export const writeLocationCache = async (
   record: LocationCacheRecord
 ): Promise<void> => {
   const key = getLocationCacheKey(userId);
-  const payload = JSON.stringify(record);
-
-  if (isNativeApp()) {
-    await Preferences.set({ key, value: payload });
-    return;
-  }
-
   if (typeof globalThis.localStorage === 'undefined') return;
-  globalThis.localStorage.setItem(key, payload);
+  globalThis.localStorage.setItem(key, JSON.stringify(record));
 };

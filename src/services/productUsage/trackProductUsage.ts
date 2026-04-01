@@ -42,12 +42,9 @@ function detectDevice(): 'mobile' | 'tablet' | 'desktop' {
  * Detect platform
  */
 function detectPlatform(): 'web' | 'ios' | 'android' {
-  // Check for Capacitor/native environment
-  if (typeof window !== 'undefined' && (window as any).Capacitor) {
-    const platform = (window as any).Capacitor.getPlatform?.();
-    if (platform === 'ios') return 'ios';
-    if (platform === 'android') return 'android';
-  }
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+  if (/iphone|ipad|ipod/.test(userAgent)) return 'ios';
+  if (/android/.test(userAgent)) return 'android';
   return 'web';
 }
 

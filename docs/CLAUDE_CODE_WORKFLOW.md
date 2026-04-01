@@ -141,16 +141,6 @@ When creating or modifying Edge Functions:
 > - Returns success/error status
 ```
 
-### Mobile Development
-
-For Capacitor mobile issues:
-
-```
-> The deep link for OAuth isn't working on iOS
-> Help me debug the Android build failure
-> Add haptic feedback to the primary CTA buttons
-```
-
 ### Responsive Design
 
 Always mention device testing:

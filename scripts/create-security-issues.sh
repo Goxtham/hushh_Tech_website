@@ -527,12 +527,12 @@ create_issue_and_add_to_project \
 
 **Issues:**
 1. \`/kyc-demo\` page accessible in production with hardcoded test users
-2. 8+ SQL files in project root (FIX_FINANCIAL_LINK.sql, RUN_THIS_NOW.sql, etc.) exposing schema
+2. One-off SQL scripts need to stay grouped under \`supabase/manual-sql/\`
 
 **Fix:**
 1. Add environment check to /kyc-demo — disable in production
-2. Move all root SQL files to \`supabase/migrations/\` with proper timestamps
-3. Remove legacy Step*.tsx files that co-exist with new step-*/logic.ts pattern
+2. Convert reusable SQL into \`supabase/migrations/\` and keep manual scripts in \`supabase/manual-sql/\`
+3. Archive or remove legacy Step*.tsx files that co-exist with the new step-*/logic.ts pattern
 
 **Ref:** docs/SECURITY_AUDIT_REPORT.txt — Section 7, LOW-007 & LOW-012" \
   "security,enhancement" \

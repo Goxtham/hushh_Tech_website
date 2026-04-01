@@ -2,21 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { LocationCacheRecord, LocationData } from '../src/services/location/types';
 
-const isNativeAppMock = vi.fn(() => false);
-const preferencesGetMock = vi.fn();
-const preferencesSetMock = vi.fn();
-
-vi.mock('../src/utils/platform', () => ({
-  isNativeApp: () => isNativeAppMock(),
-}));
-
-vi.mock('@capacitor/preferences', () => ({
-  Preferences: {
-    get: (args: unknown) => preferencesGetMock(args),
-    set: (args: unknown) => preferencesSetMock(args),
-  },
-}));
-
 import {
   buildLocationSignature,
   getLocationCacheKey,
@@ -69,7 +54,6 @@ describe('shared location cache', () => {
       value: createStorageMock(),
       configurable: true,
     });
-    isNativeAppMock.mockReturnValue(false);
   });
 
   it('uses localStorage on web and keeps the cache user-scoped', async () => {
@@ -85,23 +69,18 @@ describe('shared location cache', () => {
 
     const cached = await readLocationCache('user-a');
     expect(cached?.data.city).toBe('San Francisco');
-    expect(preferencesSetMock).not.toHaveBeenCalled();
   });
 
-  it('uses Capacitor Preferences on native platforms', async () => {
-    isNativeAppMock.mockReturnValue(true);
-    preferencesSetMock.mockResolvedValue(undefined);
-    preferencesGetMock.mockResolvedValue({ value: JSON.stringify(baseRecord) });
-
-    await writeLocationCache('native-user', baseRecord);
-    const cached = await readLocationCache('native-user');
-
-    expect(preferencesSetMock).toHaveBeenCalledWith({
-      key: getLocationCacheKey('native-user'),
-      value: JSON.stringify(baseRecord),
+  it('returns null when localStorage is unavailable', async () => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: undefined,
+      configurable: true,
     });
-    expect(cached?.data.city).toBe('San Francisco');
-    expect(globalThis.localStorage.setItem).not.toHaveBeenCalled();
+
+    await writeLocationCache('user-a', baseRecord);
+    const cached = await readLocationCache('user-a');
+
+    expect(cached).toBeNull();
   });
 
   it('ignores minor GPS jitter in the location signature but detects real changes', () => {

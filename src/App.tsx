@@ -9,7 +9,6 @@ import LoginPage from './pages/login/ui'
 import Contact from './pages/Contact';
 import ScrollToTop from './components/ScrollToTop';
 import OnboardingShellAutoPadding from './components/OnboardingShellAutoPadding';
-// FloatingContactBubble removed as requested
 import { ChakraProvider } from '@chakra-ui/react';
 import theme from './theme';
 import Consumers from './pages/services/consumers';
@@ -17,10 +16,6 @@ import Business from './pages/services/business';
 import SignupPage from './pages/signup/ui';
 import Faq from './pages/faq';
 import Career from './pages/career';
-// import Community from './pages/community'; // OLD monolithic
-// Old monolithic community (kept as backup):
-// import CommunityList from './pages/community/communityList';
-// import CommunityPost from './pages/community/communityPost';
 import CommunityPage from './pages/community/ui';
 import CommunityPostPage from './pages/community/post-ui';
 import ReportDetailPage from './pages/reports/reportDetail';
@@ -32,11 +27,9 @@ import EUUKPrivacyPolicy from './pages/eu-uk-privacy-policy';
 import DeleteAccountPage from './pages/delete-account';
 import { useState, useEffect, ReactNode } from 'react';
 import config from './resources/config/config';
-import NDAPopup from './components/NdaForm';
 import Profile from './pages/profile';
 import AuthCallback from './pages/AuthCallback';
 import KYCVerificationPage from './pages/kyc-verification/page';
-import NDARequestModal from './components/NdaForm';
 import NDARequestModalComponent from './components/NDARequestModal';
 import UserProfilePage from './pages/user-profile/page';
 import InvestorProfilePage from './pages/investor-profile';
@@ -226,9 +219,7 @@ function App() {
     
     return (
       <div className="min-h-screen flex flex-col">
-        {/* Navbar - Only show for non-Hushh AI routes */}
         {showNavbar && <Navbar />}
-        {/* {session && <NDAPopup />} */}
         <ContentWrapper>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -462,9 +453,7 @@ function App() {
             <Route path='/hushh-agents/*' element={<HushhAgentsApp />} />
           </Routes>
         </ContentWrapper>
-        {/* Footer - Only show for non-Hushh AI routes */}
         {showFooter && <Footer />}
-        {/* Mobile Bottom Navigation - only visible on mobile and non-Hushh AI routes */}
         {showMobileNav && <MobileBottomNav />}
       </div>
     );

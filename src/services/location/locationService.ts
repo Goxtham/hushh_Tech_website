@@ -252,7 +252,7 @@ export class LocationService {
       }
     }
 
-    // No Permissions API (Safari, Capacitor WebView)
+    // No Permissions API (Safari or some embedded webviews)
     // Return 'prompt' to try the direct getCurrentPosition call
     console.log('[LocationService] No Permissions API, assuming prompt available');
     return 'prompt';
