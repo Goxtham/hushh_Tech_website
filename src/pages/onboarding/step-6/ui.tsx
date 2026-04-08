@@ -235,7 +235,7 @@ export default function OnboardingStep9() {
           <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handleContinue} disabled={!isFormValid || loading}>
             {loading ? "Saving..." : "Continue"}
           </HushhTechCta>
-          <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={handleSkip}>
+          <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={handleSkip} disabled={!isFormValid || loading}>
             Skip SSN
           </HushhTechCta>
         </section>

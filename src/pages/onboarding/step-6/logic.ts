@@ -25,6 +25,92 @@ export const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
+export const MINIMUM_ONBOARDING_AGE = 18;
+export const MINIMUM_DOB_YEAR = 1930;
+
+const normalizeToday = (value: Date) =>
+  new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+
+export const buildDobYearOptions = (
+  today: Date = new Date(),
+  minimumYear: number = MINIMUM_DOB_YEAR,
+  minimumAge: number = MINIMUM_ONBOARDING_AGE
+) => {
+  const latestAdultYear = normalizeToday(today).getUTCFullYear() - minimumAge;
+  const count = latestAdultYear - minimumYear + 1;
+  if (count <= 0) return [];
+  return Array.from({ length: count }, (_, i) => String(latestAdultYear - i));
+};
+
+export const resolveDobEligibility = (
+  dobMonth: string,
+  dobDay: string,
+  dobYear: string,
+  today: Date = new Date()
+) => {
+  if (!dobMonth || !dobDay || !dobYear || dobYear.length !== 4) {
+    return {
+      isComplete: false,
+      isValidDate: false,
+      isAdult: false,
+      ageError: null as string | null,
+    };
+  }
+
+  const month = Number(dobMonth);
+  const day = Number(dobDay);
+  const year = Number(dobYear);
+
+  if (
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    !Number.isInteger(year) ||
+    month < 1 ||
+    month > 12
+  ) {
+    return {
+      isComplete: true,
+      isValidDate: false,
+      isAdult: false,
+      ageError: null as string | null,
+    };
+  }
+
+  const birthDate = new Date(Date.UTC(year, month - 1, day));
+  const isValidDate =
+    birthDate.getUTCFullYear() === year &&
+    birthDate.getUTCMonth() === month - 1 &&
+    birthDate.getUTCDate() === day;
+
+  if (!isValidDate) {
+    return {
+      isComplete: true,
+      isValidDate: false,
+      isAdult: false,
+      ageError: null as string | null,
+    };
+  }
+
+  const normalizedToday = normalizeToday(today);
+  let age = normalizedToday.getUTCFullYear() - birthDate.getUTCFullYear();
+  const monthDiff = normalizedToday.getUTCMonth() - birthDate.getUTCMonth();
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && normalizedToday.getUTCDate() < birthDate.getUTCDate())
+  ) {
+    age -= 1;
+  }
+
+  const isAdult = age >= MINIMUM_ONBOARDING_AGE;
+
+  return {
+    isComplete: true,
+    isValidDate: true,
+    isAdult,
+    ageError: isAdult ? null : `You must be at least ${MINIMUM_ONBOARDING_AGE} years old to continue`,
+  };
+};
+
 /* ═══════════════════════════════════════════════
    HOOK
    ═══════════════════════════════════════════════ */
@@ -133,9 +219,7 @@ export function useStep9Logic() {
     }
   }, [dobMonth, dobDay, dobYear]);
 
-  // Generate year options (current year down to 1930)
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: currentYear - 1929 }, (_, i) => String(currentYear - i));
+  const yearOptions = buildDobYearOptions();
 
   // Days in selected month/year
   const daysInMonth = dobMonth && dobYear
@@ -150,27 +234,18 @@ export function useStep9Logic() {
     }
   }, [dobMonth, dobYear, daysInMonth, dobDay]);
 
-  /* ─── 18+ age check ─── */
-  const isUnder18 = (() => {
-    if (!dobMonth || !dobDay || !dobYear || dobYear.length !== 4) return false;
-    const birthDate = new Date(parseInt(dobYear), parseInt(dobMonth) - 1, parseInt(dobDay));
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age < 18;
-  })();
-
-  const ageError = isUnder18 ? 'you must be at least 18 years old to continue' : null;
-
-  const isFormValid = !!(dobMonth && dobDay && dobYear && dobYear.length === 4 && !isUnder18);
+  const dobEligibility = resolveDobEligibility(dobMonth, dobDay, dobYear);
+  const isUnder18 =
+    dobEligibility.isComplete && dobEligibility.isValidDate && !dobEligibility.isAdult;
+  const ageError = dobEligibility.ageError;
+  const isFormValid =
+    dobEligibility.isComplete && dobEligibility.isValidDate && dobEligibility.isAdult;
 
   /* ─── Handlers ─── */
   const handleContinue = async () => {
-    if (isUnder18) { setError('you must be at least 18 years old to continue'); return; }
-    if (!isFormValid) { setError('Please enter your date of birth'); return; }
+    if (!dobEligibility.isComplete) { setError('Please enter your date of birth'); return; }
+    if (!dobEligibility.isValidDate) { setError('Please enter a valid date of birth'); return; }
+    if (!dobEligibility.isAdult) { setError(ageError || 'You must be at least 18 years old to continue'); return; }
     setLoading(true); setError(null);
 
     if (!config.supabaseClient) { setError('Configuration error'); setLoading(false); return; }
@@ -188,7 +263,9 @@ export function useStep9Logic() {
   };
 
   const handleSkip = async () => {
-    if (!isFormValid) { setError('Please enter your date of birth before skipping'); return; }
+    if (!dobEligibility.isComplete) { setError('Please enter your date of birth before skipping'); return; }
+    if (!dobEligibility.isValidDate) { setError('Please enter a valid date of birth'); return; }
+    if (!dobEligibility.isAdult) { setError(ageError || 'You must be at least 18 years old to continue'); return; }
     setLoading(true); setError(null);
 
     if (!config.supabaseClient) { setError('Configuration error'); setLoading(false); return; }
