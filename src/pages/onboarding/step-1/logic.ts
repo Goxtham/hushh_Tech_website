@@ -81,6 +81,7 @@ export interface Step1Logic {
   handleCustomAmountChange: (e: ChangeEvent<HTMLInputElement>) => void;
   setFrequency: (f: RecurringFrequency) => void;
   setInvestmentDay: (d: string) => void;
+  toggleRecurring: () => void;
   handleNext: () => Promise<void>;
   handleBack: () => void;
 }
@@ -98,8 +99,9 @@ export const useStep1Logic = (): Step1Logic => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [customAmountError, setCustomAmountError] = useState<string | null>(null);
-  /* Recurring investment is compulsory — always enabled */
-  const recurringEnabled = true;
+  /* Recurring investment — default OFF, user can toggle ON */
+  const [recurringEnabled, setRecurringEnabled] = useState(false);
+  const toggleRecurring = () => setRecurringEnabled((prev) => !prev);
 
   const totalInvestment = SHARE_CLASSES.reduce((t, sc) => t + units[sc.id] * sc.unitPrice, 0);
   const hasSelection = Object.values(units).some((c) => c > 0);
@@ -147,6 +149,7 @@ export const useStep1Logic = (): Step1Logic => {
       if (onboardingData) {
         setUnits({ class_a: onboardingData.class_a_units || 0, class_b: onboardingData.class_b_units || 0, class_c: onboardingData.class_c_units || 0 });
         if (onboardingData.recurring_frequency) {
+          setRecurringEnabled(true);
           const freqMap: Record<string, RecurringFrequency> = {
             once_a_month: 'once_a_month', twice_a_month: 'twice_a_month',
             weekly: 'weekly', every_other_week: 'every_other_week',
@@ -246,7 +249,7 @@ export const useStep1Logic = (): Step1Logic => {
   return {
     units, frequency, investmentDay, selectedAmount, customAmount, customAmountError,
     error, isLoading, isFooterVisible, totalInvestment, hasSelection,
-    recurringEnabled,
+    recurringEnabled, toggleRecurring,
     handleUnitChange, handleAmountClick, handleCustomAmountChange,
     setFrequency, setInvestmentDay, handleNext, handleBack,
   };
