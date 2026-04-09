@@ -14,7 +14,10 @@ import {
 import resources from "../../resources/resources";
 import {
   APPLE_WALLET_SUPPORT_MESSAGE,
+  buildGoldPassPreviewModel,
   downloadHushhGoldPass,
+  fetchGoogleWalletAvailability,
+  GOOGLE_WALLET_SUPPORT_MESSAGE,
   isAppleWalletSupported,
   launchGoogleWalletPass,
 } from "../../services/walletPass";
@@ -30,6 +33,11 @@ export function useInvestorProfileLogic() {
   const [isApplePassLoading, setIsApplePassLoading] = useState(false);
   const [isGooglePassLoading, setIsGooglePassLoading] = useState(false);
   const [walletPassReady, setWalletPassReady] = useState(false);
+  const [isWalletPreviewOpen, setIsWalletPreviewOpen] = useState(false);
+  const [googleWalletSupported, setGoogleWalletSupported] = useState(false);
+  const [googleWalletSupportMessage, setGoogleWalletSupportMessage] = useState(
+    GOOGLE_WALLET_SUPPORT_MESSAGE
+  );
   const navigate = useNavigate();
   const toast = useToast();
   const passReady = walletPassReady;
@@ -88,6 +96,20 @@ export function useInvestorProfileLogic() {
     checkExistingProfile();
   }, [navigate]);
 
+  useEffect(() => {
+    let active = true;
+
+    fetchGoogleWalletAvailability().then((availability) => {
+      if (!active) return;
+      setGoogleWalletSupported(availability.available);
+      setGoogleWalletSupportMessage(availability.message);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const triggerWalletPassDownload = async (
     wallet: "apple" | "google",
     setLoading: (value: boolean) => void
@@ -97,6 +119,16 @@ export function useInvestorProfileLogic() {
       toast({
         title: "Apple Wallet unavailable",
         description: APPLE_WALLET_SUPPORT_MESSAGE,
+        status: "info",
+        duration: 4000,
+      });
+      return;
+    }
+
+    if (wallet === "google" && !googleWalletSupported) {
+      toast({
+        title: "Google Wallet unavailable",
+        description: googleWalletSupportMessage,
         status: "info",
         duration: 4000,
       });
@@ -229,6 +261,16 @@ export function useInvestorProfileLogic() {
   const handleGoogleWalletDownload = () =>
     triggerWalletPassDownload("google", setIsGooglePassLoading);
 
+  const walletPreview =
+    profile &&
+    buildGoldPassPreviewModel({
+      name: profile.name,
+      email: profile.email,
+      organisation: profile.organisation,
+      slug: profile.slug,
+      userId: profile.user_id,
+    });
+
   return {
     step,
     isProcessing,
@@ -237,15 +279,21 @@ export function useInvestorProfileLogic() {
     userData,
     isApplePassLoading,
     isGooglePassLoading,
+    isWalletPreviewOpen,
     appleWalletSupported,
     appleWalletSupportMessage: APPLE_WALLET_SUPPORT_MESSAGE,
+    googleWalletSupported,
+    googleWalletSupportMessage,
     passReady,
     profileUrl,
+    walletPreview,
     handleFormSubmit,
     handleProfileConfirm,
     handleCopyURL,
     handleShare,
     handleAppleWalletDownload,
     handleGoogleWalletDownload,
+    openWalletPreview: () => setIsWalletPreviewOpen(true),
+    closeWalletPreview: () => setIsWalletPreviewOpen(false),
   };
 }

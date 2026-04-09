@@ -15,12 +15,22 @@ import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTe
 import HushhTechCta, { HushhTechCtaVariant } from "../../components/hushh-tech-cta/HushhTechCta";
 import { useFooterVisibility } from "../../utils/useFooterVisibility";
 import { InvestorChatWidget } from "../../components/InvestorChatWidget";
+import WalletCardPreviewModal from "../../components/wallet/WalletCardPreviewModal";
 import { fetchPublicInvestorProfileBySlug } from "../../services/investorProfile";
 import { maskProfileData, maskOnboardingField } from "../../utils/maskSensitiveData";
 import { InvestorProfile, FIELD_LABELS, VALUE_LABELS, ONBOARDING_FIELD_LABELS } from "../../types/investorProfile";
 import { OnboardingData } from "../../types/onboarding";
 import type { ShadowProfile } from "../../types/shadowProfile";
 import { FINANCIAL_LINK_ROUTE } from "../../services/onboarding/flow";
+import {
+  APPLE_WALLET_SUPPORT_MESSAGE,
+  buildGoldPassPreviewModel,
+  downloadHushhGoldPass,
+  fetchGoogleWalletAvailability,
+  GOOGLE_WALLET_SUPPORT_MESSAGE,
+  isAppleWalletSupported,
+  launchGoogleWalletPass,
+} from "../../services/walletPass";
 
 type TabType = 'home' | 'chat';
 
@@ -33,7 +43,15 @@ const PublicInvestorProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
+  const [isWalletPreviewOpen, setIsWalletPreviewOpen] = useState(false);
+  const [isApplePassLoading, setIsApplePassLoading] = useState(false);
+  const [isGooglePassLoading, setIsGooglePassLoading] = useState(false);
+  const [googleWalletSupported, setGoogleWalletSupported] = useState(false);
+  const [googleWalletSupportMessage, setGoogleWalletSupportMessage] = useState(
+    GOOGLE_WALLET_SUPPORT_MESSAGE
+  );
   const contentRef = React.useRef<HTMLDivElement>(null);
+  const appleWalletSupported = isAppleWalletSupported();
 
   // Hide global footer on this page (uses its own bottom nav)
   useFooterVisibility();
@@ -54,6 +72,20 @@ const PublicInvestorProfilePage: React.FC = () => {
     
     return () => clearTimeout(timer);
   }, [activeTab]);
+
+  useEffect(() => {
+    let active = true;
+
+    fetchGoogleWalletAvailability().then((availability) => {
+      if (!active) return;
+      setGoogleWalletSupported(availability.available);
+      setGoogleWalletSupportMessage(availability.message);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
   
   const profileUrl = `https://hushhtech.com/investor/${slug}`;
   const { hasCopied, onCopy } = useClipboard(profileUrl);
@@ -241,6 +273,78 @@ const PublicInvestorProfilePage: React.FC = () => {
   };
 
   const visibleOnboardingFields = getVisibleOnboardingFields();
+  const walletPassInput = {
+    name: maskedData.name || "Hushh Investor",
+    organisation: maskedData.organisation || profileData.organisation || null,
+    slug: slug || null,
+  };
+  const walletPreview = buildGoldPassPreviewModel(walletPassInput);
+
+  const handleAppleWalletPass = async () => {
+    if (!appleWalletSupported) {
+      toast({
+        title: "Apple Wallet unavailable",
+        description: APPLE_WALLET_SUPPORT_MESSAGE,
+        status: "info",
+        duration: 4000,
+      });
+      return;
+    }
+
+    setIsApplePassLoading(true);
+    try {
+      await downloadHushhGoldPass(walletPassInput);
+      toast({
+        title: "Opening Apple Wallet",
+        description: "Open the pass preview to add it to Apple Wallet.",
+        status: "info",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Apple Wallet failed",
+        description:
+          error instanceof Error ? error.message : "Failed to generate Apple Wallet pass",
+        status: "error",
+        duration: 4000,
+      });
+    } finally {
+      setIsApplePassLoading(false);
+    }
+  };
+
+  const handleGoogleWalletPass = async () => {
+    if (!googleWalletSupported) {
+      toast({
+        title: "Google Wallet unavailable",
+        description: googleWalletSupportMessage,
+        status: "info",
+        duration: 4000,
+      });
+      return;
+    }
+
+    setIsGooglePassLoading(true);
+    try {
+      await launchGoogleWalletPass(walletPassInput);
+      toast({
+        title: "Google Wallet",
+        description: "Redirecting to Google Wallet...",
+        status: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Google Wallet failed",
+        description:
+          error instanceof Error ? error.message : "Failed to generate Google Wallet pass",
+        status: "error",
+        duration: 4000,
+      });
+    } finally {
+      setIsGooglePassLoading(false);
+    }
+  };
 
   return (
     <>
@@ -274,20 +378,45 @@ const PublicInvestorProfilePage: React.FC = () => {
                 <section className="pt-6 pb-2">
                   <div className="flex items-center justify-center gap-4">
                     <button
-                      className="flex items-center gap-2.5 px-6 py-3 bg-[#F5F5F5] rounded-full hover:bg-gray-200 active:scale-[0.97] transition-all"
+                      onClick={handleAppleWalletPass}
+                      disabled={isApplePassLoading || !appleWalletSupported}
+                      className="flex items-center gap-2.5 px-6 py-3 bg-[#F5F5F5] rounded-full hover:bg-gray-200 active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Add to Apple Wallet"
                     >
                       <FaApple className="w-5 h-5 text-black" />
-                      <span className="text-sm font-medium text-black">Apple Wallet</span>
+                      <span className="text-sm font-medium text-black">
+                        {isApplePassLoading ? "Loading..." : "Apple Wallet"}
+                      </span>
                     </button>
                     <button
-                      className="flex items-center gap-2.5 px-6 py-3 bg-[#F5F5F5] rounded-full hover:bg-gray-200 active:scale-[0.97] transition-all"
+                      onClick={handleGoogleWalletPass}
+                      disabled={isGooglePassLoading || !googleWalletSupported}
+                      className="flex items-center gap-2.5 px-6 py-3 bg-[#F5F5F5] rounded-full hover:bg-gray-200 active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Add to Google Wallet"
                     >
                       <FaGoogle className="w-4 h-4" style={{ color: '#4285F4' }} />
-                      <span className="text-sm font-medium text-black">Google Wallet</span>
+                      <span className="text-sm font-medium text-black">
+                        {isGooglePassLoading ? "Loading..." : "Google Wallet"}
+                      </span>
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsWalletPreviewOpen(true)}
+                    className="mt-3 w-full border border-gray-200 rounded-full px-5 py-3 text-sm font-medium text-black hover:bg-gray-50 transition-colors"
+                  >
+                    Preview Card
+                  </button>
+                  {!appleWalletSupported && (
+                    <p className="mt-3 text-center text-xs text-gray-500 font-light">
+                      {APPLE_WALLET_SUPPORT_MESSAGE}
+                    </p>
+                  )}
+                  {!googleWalletSupported && (
+                    <p className="mt-2 text-center text-xs text-gray-500 font-light">
+                      {googleWalletSupportMessage}
+                    </p>
+                  )}
                 </section>
 
                 {/* Welcome Section */}
@@ -696,6 +825,19 @@ const PublicInvestorProfilePage: React.FC = () => {
           </nav>
         </main>
       </div>
+      <WalletCardPreviewModal
+        isOpen={isWalletPreviewOpen}
+        onClose={() => setIsWalletPreviewOpen(false)}
+        preview={walletPreview}
+        appleWalletSupported={appleWalletSupported}
+        appleWalletSupportMessage={APPLE_WALLET_SUPPORT_MESSAGE}
+        onAddToAppleWallet={handleAppleWalletPass}
+        isApplePassLoading={isApplePassLoading}
+        googleWalletAvailable={googleWalletSupported}
+        googleWalletSupportMessage={googleWalletSupportMessage}
+        onAddToGoogleWallet={handleGoogleWalletPass}
+        isGooglePassLoading={isGooglePassLoading}
+      />
     </>
   );
 };

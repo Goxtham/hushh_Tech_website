@@ -3,6 +3,8 @@ const HUSHH_GOOGLE_WALLET_ENDPOINT = "/api/google-wallet-pass";
 
 export const APPLE_WALLET_SUPPORT_MESSAGE =
   "Available on iPhone in Wallet-supported browsers.";
+export const GOOGLE_WALLET_SUPPORT_MESSAGE =
+  "Google Wallet is temporarily unavailable while we finish the wallet issuer setup.";
 
 export interface WalletPassInput {
   name: string;
@@ -11,6 +13,24 @@ export interface WalletPassInput {
   slug?: string | null;
   userId?: string | null;
   investmentAmount?: number | null;
+}
+
+export interface WalletPreviewModel {
+  badgeText: string;
+  title: string;
+  holderName: string;
+  organizationName: string;
+  membershipId: string;
+  investmentClass: string;
+  email: string;
+  qrValue: string;
+  profileUrl: string;
+}
+
+export interface GoogleWalletAvailability {
+  available: boolean;
+  message: string;
+  provider: "local" | "upstream" | "none";
 }
 
 interface WalletPassResult {
@@ -30,8 +50,30 @@ interface AppleWalletSupportInput {
   maxTouchPoints?: number;
 }
 
+interface GoldPassDescriptor {
+  investorName: string;
+  organizationName: string;
+  investmentClass: string;
+  membershipId: string;
+  email: string;
+  profileUrl: string;
+}
+
+const DEFAULT_GOOGLE_WALLET_AVAILABILITY: GoogleWalletAvailability = {
+  available: false,
+  message: GOOGLE_WALLET_SUPPORT_MESSAGE,
+  provider: "none",
+};
+
+let googleWalletAvailabilityCache: GoogleWalletAvailability | null = null;
+let googleWalletAvailabilityRequest: Promise<GoogleWalletAvailability> | null =
+  null;
+
 const sanitizeForFilename = (value: string) => {
-  const safe = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const safe = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
   return safe || "hushh-gold-card";
 };
 
@@ -45,66 +87,48 @@ const getInvestmentClass = (amount?: number | null) => {
   return "Class C";
 };
 
-export const buildGoldPassPayload = (input: WalletPassInput) => {
-  const profileUrl = input.slug
-    ? `https://hushhtech.com/investor/${input.slug}`
-    : "https://hushhtech.com";
+const buildProfileUrl = (input: WalletPassInput) =>
+  input.slug ? `https://hushhtech.com/investor/${input.slug}` : "https://hushhtech.com";
 
-  const membershipId =
-    input.slug ||
-    input.userId ||
-    (input.email ? input.email.split("@")[0] : "hushh-investor");
+const buildMembershipId = (input: WalletPassInput) =>
+  input.slug ||
+  input.userId ||
+  (input.email ? input.email.split("@")[0] : "hushh-investor");
 
-  const investorName = getDisplayValue(input.name, "Hushh Investor");
-  const investmentClass = getInvestmentClass(input.investmentAmount);
+const buildGoldPassDescriptor = (input: WalletPassInput): GoldPassDescriptor => ({
+  investorName: getDisplayValue(input.name, "Hushh Investor"),
+  organizationName: getDisplayValue(input.organisation, "Hushh"),
+  investmentClass: getInvestmentClass(input.investmentAmount),
+  membershipId: buildMembershipId(input),
+  email: getDisplayValue(input.email, "—"),
+  profileUrl: buildProfileUrl(input),
+});
 
-  return {
-    passType: "storeCard",
-    description: "Hushh Gold Investor Pass",
-    organizationName: "Hushh Technologies",
-    logoText: "hushh Gold Pass",
-    backgroundColor: "rgb(212, 175, 55)", // gold
-    foregroundColor: "rgb(12, 12, 12)", // black text
-    labelColor: "rgb(32, 32, 32)",
-    headerFields: [
-      { key: "status", label: "Status", value: "Gold Member", textAlignment: "PKTextAlignmentLeft" },
-      { key: "org", label: "Organization", value: getDisplayValue(input.organisation, "Hushh"), textAlignment: "PKTextAlignmentLeft" },
-    ],
-    primaryFields: [
-      { key: "investor", label: "Holder", value: investorName, textAlignment: "PKTextAlignmentLeft" },
-    ],
-    secondaryFields: [
-      { key: "class", label: "Investor", value: `Investor - ${investmentClass}`, textAlignment: "PKTextAlignmentLeft" },
-    ],
-    auxiliaryFields: [
-      { key: "email", label: "Email", value: getDisplayValue(input.email, "—"), textAlignment: "PKTextAlignmentLeft" },
-      { key: "memberId", label: "Membership ID", value: membershipId, textAlignment: "PKTextAlignmentLeft" },
-    ],
-    barcode: {
-      message: profileUrl,
-      format: "PKBarcodeFormatQR",
-      altText: "Hushh Gold Pass QR",
-    },
-    webServiceURL: profileUrl,
-  };
-};
+async function readWalletError(response: Response, fallback: string) {
+  const contentType = response.headers.get("content-type") || "";
 
-export const isAppleWalletSupported = (
-  input: AppleWalletSupportInput = {}
+  if (contentType.includes("application/json")) {
+    try {
+      const payload = await response.json();
+      if (typeof payload?.detail === "string" && payload.detail.trim()) {
+        return payload.detail;
+      }
+      if (typeof payload?.error === "string" && payload.error.trim()) {
+        return payload.error;
+      }
+    } catch {
+      return fallback;
+    }
+  }
+
+  const errorText = await response.text().catch(() => "");
+  return errorText || fallback;
+}
+
+const submitWalletPassForm = (
+  endpoint: string,
+  payload: ReturnType<typeof buildGoldPassPayload>
 ) => {
-  const nav = typeof navigator !== "undefined" ? navigator : undefined;
-  const userAgent = input.userAgent ?? nav?.userAgent ?? "";
-  const platform = input.platform ?? nav?.platform ?? "";
-  const maxTouchPoints = input.maxTouchPoints ?? nav?.maxTouchPoints ?? 0;
-
-  const isAppleMobilePlatform = /(iPhone|iPad|iPod)/i.test(platform);
-  const isIpadOs = platform === "MacIntel" && maxTouchPoints > 1;
-  const isMobileAppleUserAgent = /(iPhone|iPad|iPod)/i.test(userAgent);
-
-  return isAppleMobilePlatform || isIpadOs || (isMobileAppleUserAgent && maxTouchPoints > 1);
-};
-
-const submitWalletPassForm = (endpoint: string, payload: ReturnType<typeof buildGoldPassPayload>) => {
   if (typeof document === "undefined") {
     throw new Error("Wallet pass downloads require a browser environment");
   }
@@ -125,8 +149,155 @@ const submitWalletPassForm = (endpoint: string, payload: ReturnType<typeof build
   window.setTimeout(() => form.remove(), 1000);
 };
 
-export async function requestHushhGoldPass(input: WalletPassInput): Promise<WalletPassResult> {
-  // Wallet API calls stay same-origin so main-web CSP can remain strict.
+export const buildGoldPassPayload = (input: WalletPassInput) => {
+  const descriptor = buildGoldPassDescriptor(input);
+
+  return {
+    passType: "storeCard",
+    description: "Hushh Gold Investor Pass",
+    organizationName: "Hushh Technologies",
+    logoText: "hushh Gold Pass",
+    backgroundColor: "rgb(212, 175, 55)",
+    foregroundColor: "rgb(12, 12, 12)",
+    labelColor: "rgb(32, 32, 32)",
+    headerFields: [
+      {
+        key: "status",
+        label: "Status",
+        value: "Gold Member",
+        textAlignment: "PKTextAlignmentLeft",
+      },
+      {
+        key: "org",
+        label: "Organization",
+        value: descriptor.organizationName,
+        textAlignment: "PKTextAlignmentLeft",
+      },
+    ],
+    primaryFields: [
+      {
+        key: "investor",
+        label: "Holder",
+        value: descriptor.investorName,
+        textAlignment: "PKTextAlignmentLeft",
+      },
+    ],
+    secondaryFields: [
+      {
+        key: "class",
+        label: "Investor",
+        value: `Investor - ${descriptor.investmentClass}`,
+        textAlignment: "PKTextAlignmentLeft",
+      },
+    ],
+    auxiliaryFields: [
+      {
+        key: "email",
+        label: "Email",
+        value: descriptor.email,
+        textAlignment: "PKTextAlignmentLeft",
+      },
+      {
+        key: "memberId",
+        label: "Membership ID",
+        value: descriptor.membershipId,
+        textAlignment: "PKTextAlignmentLeft",
+      },
+    ],
+    barcode: {
+      message: descriptor.profileUrl,
+      format: "PKBarcodeFormatQR",
+      altText: "Hushh Gold Pass QR",
+    },
+    webServiceURL: descriptor.profileUrl,
+  };
+};
+
+export const buildGoldPassPreviewModel = (
+  input: WalletPassInput
+): WalletPreviewModel => {
+  const descriptor = buildGoldPassDescriptor(input);
+
+  return {
+    badgeText: "HUSHH GOLD",
+    title: "Hushh Gold Investor Pass",
+    holderName: descriptor.investorName,
+    organizationName: descriptor.organizationName,
+    membershipId: descriptor.membershipId,
+    investmentClass: descriptor.investmentClass,
+    email: descriptor.email,
+    qrValue: descriptor.profileUrl,
+    profileUrl: descriptor.profileUrl,
+  };
+};
+
+export const isAppleWalletSupported = (
+  input: AppleWalletSupportInput = {}
+) => {
+  const nav = typeof navigator !== "undefined" ? navigator : undefined;
+  const userAgent = input.userAgent ?? nav?.userAgent ?? "";
+  const platform = input.platform ?? nav?.platform ?? "";
+  const maxTouchPoints = input.maxTouchPoints ?? nav?.maxTouchPoints ?? 0;
+
+  const isAppleMobilePlatform = /(iPhone|iPad|iPod)/i.test(platform);
+  const isIpadOs = platform === "MacIntel" && maxTouchPoints > 1;
+  const isMobileAppleUserAgent = /(iPhone|iPad|iPod)/i.test(userAgent);
+
+  return (
+    isAppleMobilePlatform ||
+    isIpadOs ||
+    (isMobileAppleUserAgent && maxTouchPoints > 1)
+  );
+};
+
+export async function fetchGoogleWalletAvailability(
+  options: { force?: boolean } = {}
+): Promise<GoogleWalletAvailability> {
+  const { force = false } = options;
+
+  if (!force && googleWalletAvailabilityCache) {
+    return googleWalletAvailabilityCache;
+  }
+
+  if (!force && googleWalletAvailabilityRequest) {
+    return googleWalletAvailabilityRequest;
+  }
+
+  googleWalletAvailabilityRequest = fetch(HUSHH_GOOGLE_WALLET_ENDPOINT, {
+    method: "GET",
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        return DEFAULT_GOOGLE_WALLET_AVAILABILITY;
+      }
+
+      const payload = await response.json().catch(() => null);
+      const availability: GoogleWalletAvailability = {
+        available: Boolean(payload?.available),
+        message:
+          typeof payload?.message === "string" && payload.message.trim().length > 0
+            ? payload.message
+            : GOOGLE_WALLET_SUPPORT_MESSAGE,
+        provider:
+          payload?.provider === "local" || payload?.provider === "upstream"
+            ? payload.provider
+            : "none",
+      };
+
+      googleWalletAvailabilityCache = availability;
+      return availability;
+    })
+    .catch(() => DEFAULT_GOOGLE_WALLET_AVAILABILITY)
+    .finally(() => {
+      googleWalletAvailabilityRequest = null;
+    });
+
+  return googleWalletAvailabilityRequest;
+}
+
+export async function requestHushhGoldPass(
+  input: WalletPassInput
+): Promise<WalletPassResult> {
   const response = await fetch(HUSHH_WALLET_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -134,8 +305,9 @@ export async function requestHushhGoldPass(input: WalletPassInput): Promise<Wall
   });
 
   if (!response.ok) {
-    const errorText = await response.text().catch(() => "Unknown error");
-    throw new Error(errorText || "Wallet pass generation failed");
+    throw new Error(
+      await readWalletError(response, "Wallet pass generation failed")
+    );
   }
 
   const blob = await response.blob();
@@ -144,11 +316,15 @@ export async function requestHushhGoldPass(input: WalletPassInput): Promise<Wall
   return { blob, filename };
 }
 
-export async function downloadHushhGoldPass(input: WalletPassInput): Promise<void> {
+export async function downloadHushhGoldPass(
+  input: WalletPassInput
+): Promise<void> {
   submitWalletPassForm(HUSHH_WALLET_ENDPOINT, buildGoldPassPayload(input));
 }
 
-export async function requestGoogleWalletPass(input: WalletPassInput): Promise<GoogleWalletResult> {
+export async function requestGoogleWalletPass(
+  input: WalletPassInput
+): Promise<GoogleWalletResult> {
   const response = await fetch(HUSHH_GOOGLE_WALLET_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -156,8 +332,9 @@ export async function requestGoogleWalletPass(input: WalletPassInput): Promise<G
   });
 
   if (!response.ok) {
-    const errorText = await response.text().catch(() => "Unknown error");
-    throw new Error(errorText || "Google Wallet pass generation failed");
+    throw new Error(
+      await readWalletError(response, "Google Wallet pass generation failed")
+    );
   }
 
   const contentType = response.headers.get("content-type") || "";
@@ -174,7 +351,9 @@ export async function requestGoogleWalletPass(input: WalletPassInput): Promise<G
   return { blob, filename };
 }
 
-export async function launchGoogleWalletPass(input: WalletPassInput): Promise<void> {
+export async function launchGoogleWalletPass(
+  input: WalletPassInput
+): Promise<void> {
   const result = await requestGoogleWalletPass(input);
 
   if (result.saveUrl) {

@@ -10,7 +10,9 @@ import {
 } from "vitest";
 
 import {
+  buildGoldPassPreviewModel,
   downloadHushhGoldPass,
+  fetchGoogleWalletAvailability,
   isAppleWalletSupported,
   requestGoogleWalletPass,
 } from "../src/services/walletPass";
@@ -79,6 +81,52 @@ describe("wallet pass service", () => {
     );
     expect(result).toEqual({
       saveUrl: "https://pay.google.com/gp/v/save/test",
+    });
+  });
+
+  it("builds browser preview data from the same gold pass source values", () => {
+    const preview = buildGoldPassPreviewModel({
+      name: "Test User",
+      email: "test@example.com",
+      organisation: "Hushh",
+      slug: "test-user",
+      userId: "user-123",
+      investmentAmount: 2_500_000,
+    });
+
+    expect(preview).toMatchObject({
+      badgeText: "HUSHH GOLD",
+      title: "Hushh Gold Investor Pass",
+      holderName: "Test User",
+      organizationName: "Hushh",
+      membershipId: "test-user",
+      investmentClass: "Class B",
+      email: "test@example.com",
+      qrValue: "https://hushhtech.com/investor/test-user",
+    });
+  });
+
+  it("reads Google Wallet availability from the same-origin route", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        available: true,
+        message: "Google Wallet is ready.",
+        provider: "upstream",
+      }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const availability = await fetchGoogleWalletAvailability({ force: true });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/google-wallet-pass", {
+      method: "GET",
+    });
+    expect(availability).toEqual({
+      available: true,
+      message: "Google Wallet is ready.",
+      provider: "upstream",
     });
   });
 

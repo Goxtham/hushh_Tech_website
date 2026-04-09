@@ -131,4 +131,53 @@ describe("wallet proxy routes", () => {
     );
     expect(Buffer.isBuffer(res.body)).toBe(true);
   });
+
+  it("reports Google Wallet health as unavailable when the upstream route is missing", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 404,
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const req = {
+      method: "GET",
+      body: null,
+    };
+    const res = createResponse();
+
+    await googleWalletPassHandler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      available: false,
+      provider: "none",
+      message:
+        "Google Wallet is temporarily unavailable while we finish the wallet issuer setup.",
+    });
+  });
+
+  it("returns a friendly 503 when the upstream Google Wallet endpoint is missing", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      text: async () => "not found",
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const req = {
+      method: "POST",
+      body: { passType: "storeCard" },
+    };
+    const res = createResponse();
+
+    await googleWalletPassHandler(req, res);
+
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toEqual({
+      error: "Google Wallet unavailable",
+      detail:
+        "Google Wallet is temporarily unavailable while we finish the wallet issuer setup.",
+    });
+  });
 });

@@ -15,6 +15,7 @@ import { Share2 } from "lucide-react";
 import { FaApple, FaGoogle } from "react-icons/fa";
 import { InvestorProfileForm } from "../../components/investorProfile/InvestorProfileForm";
 import { InvestorProfileReview } from "../../components/investorProfile/InvestorProfileReview";
+import WalletCardPreviewModal from "../../components/wallet/WalletCardPreviewModal";
 import { useInvestorProfileLogic } from "./logic";
 
 function InvestorProfilePage() {
@@ -26,15 +27,21 @@ function InvestorProfilePage() {
     userData,
     isApplePassLoading,
     isGooglePassLoading,
+    isWalletPreviewOpen,
     appleWalletSupported,
     appleWalletSupportMessage,
+    googleWalletSupported,
+    googleWalletSupportMessage,
     profileUrl,
+    walletPreview,
     handleFormSubmit,
     handleProfileConfirm,
     handleCopyURL,
     handleShare,
     handleAppleWalletDownload,
     handleGoogleWalletDownload,
+    openWalletPreview,
+    closeWalletPreview,
   } = useInvestorProfileLogic();
 
   // Loading state
@@ -142,7 +149,19 @@ function InvestorProfilePage() {
               p={6}
               boxShadow="0 10px 30px rgba(15, 23, 42, 0.06)"
             >
-              <HStack spacing={4} justify="center">
+              <VStack spacing={4}>
+                <Button
+                  onClick={openWalletPreview}
+                  variant="outline"
+                  size="sm"
+                  w="full"
+                  borderRadius="12px"
+                  borderColor="gray.300"
+                  h="44px"
+                >
+                  Preview Card
+                </Button>
+                <HStack spacing={4} justify="center" w="full">
                 <Button
                   aria-label="Add to Apple Wallet"
                   onClick={handleAppleWalletDownload}
@@ -169,6 +188,7 @@ function InvestorProfilePage() {
                 <Button
                   aria-label="Add to Google Wallet"
                   onClick={handleGoogleWalletDownload}
+                  isDisabled={!googleWalletSupported}
                   isLoading={isGooglePassLoading}
                   loadingText=""
                   spinner={<Spinner size="sm" color="#0B1120" />}
@@ -188,13 +208,33 @@ function InvestorProfilePage() {
                 >
                   <Icon as={FaGoogle} boxSize={6} />
                 </Button>
-              </HStack>
+                </HStack>
+              </VStack>
               {!appleWalletSupported && (
                 <Text mt={3} fontSize="xs" color="gray.500" textAlign="center">
                   {appleWalletSupportMessage}
                 </Text>
               )}
+              {!googleWalletSupported && (
+                <Text mt={3} fontSize="xs" color="gray.500" textAlign="center">
+                  {googleWalletSupportMessage}
+                </Text>
+              )}
             </Box>
+
+            <WalletCardPreviewModal
+              isOpen={isWalletPreviewOpen}
+              onClose={closeWalletPreview}
+              preview={walletPreview}
+              appleWalletSupported={appleWalletSupported}
+              appleWalletSupportMessage={appleWalletSupportMessage}
+              onAddToAppleWallet={handleAppleWalletDownload}
+              isApplePassLoading={isApplePassLoading}
+              googleWalletAvailable={googleWalletSupported}
+              googleWalletSupportMessage={googleWalletSupportMessage}
+              onAddToGoogleWallet={handleGoogleWalletDownload}
+              isGooglePassLoading={isGooglePassLoading}
+            />
           </VStack>
         </Center>
       </Container>

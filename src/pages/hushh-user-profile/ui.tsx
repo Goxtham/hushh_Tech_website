@@ -13,6 +13,7 @@ import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTe
 import HushhTechCta, { HushhTechCtaVariant } from "../../components/hushh-tech-cta/HushhTechCta";
 import HushhTechFooter, { HushhFooterTab } from "../../components/hushh-tech-footer/HushhTechFooter";
 import NWSScoreBadge from "../../components/profile/NWSScoreBadge";
+import WalletCardPreviewModal from "../../components/wallet/WalletCardPreviewModal";
 
 /* ── Playfair heading style ── */
 const playfair = { fontFamily: "'Playfair Display', serif" };
@@ -41,11 +42,13 @@ const HushhUserProfilePage: React.FC = () => {
   const {
     form, investorProfile, loading, loadingSeconds, isProcessing, investorStatus,
     hasOnboardingData, isApplePassLoading, isGooglePassLoading, nwsResult, nwsLoading,
-    appleWalletSupported, appleWalletSupportMessage,
+    isWalletPreviewOpen, appleWalletSupported, appleWalletSupportMessage,
+    googleWalletSupported, googleWalletSupportMessage, walletPreview,
     hasCopied, onCopy, profileUrl, navigate,
     handleChange, handleBack, handleSave,
     isDirty, isSaving, handleSaveChanges,
     handleAppleWalletPass, handleGoogleWalletPass, COUNTRIES,
+    openWalletPreview, closeWalletPreview,
     editingField, setEditingField, FIELD_OPTIONS, MULTI_SELECT_FIELDS,
     handleUpdateAIField, handleMultiSelectToggle, getConfidenceLabel, getConfidenceBadgeClass,
   } = useHushhUserProfileLogic();
@@ -388,6 +391,13 @@ const HushhUserProfilePage: React.FC = () => {
               {hasCopied ? <Check className="w-4 h-4 text-ios-green" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
+          <button
+            type="button"
+            onClick={openWalletPreview}
+            className="mb-4 w-full border border-gray-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 hover:border-hushh-blue/30 transition-colors"
+          >
+            <span className="text-xs font-medium">Preview Card</span>
+          </button>
           <div className="grid grid-cols-2 gap-4">
             <button
               type="button"
@@ -398,7 +408,7 @@ const HushhUserProfilePage: React.FC = () => {
               <FaApple className="text-lg" />
               <span className="text-xs font-medium">{isApplePassLoading ? "Loading..." : "Apple Wallet"}</span>
             </button>
-            <button type="button" onClick={handleGoogleWalletPass} disabled={isGooglePassLoading} className="border border-gray-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 hover:border-hushh-blue/30 transition-colors disabled:opacity-50">
+            <button type="button" onClick={handleGoogleWalletPass} disabled={isGooglePassLoading || !googleWalletSupported} className="border border-gray-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 hover:border-hushh-blue/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               <FcGoogle className="text-lg" />
               <span className="text-xs font-medium">{isGooglePassLoading ? "Loading..." : "Google Wallet"}</span>
             </button>
@@ -408,7 +418,26 @@ const HushhUserProfilePage: React.FC = () => {
               {appleWalletSupportMessage}
             </p>
           )}
+          {!googleWalletSupported && (
+            <p className="mt-3 text-xs text-gray-500 font-light">
+              {googleWalletSupportMessage}
+            </p>
+          )}
         </section>
+
+        <WalletCardPreviewModal
+          isOpen={isWalletPreviewOpen}
+          onClose={closeWalletPreview}
+          preview={walletPreview}
+          appleWalletSupported={appleWalletSupported}
+          appleWalletSupportMessage={appleWalletSupportMessage}
+          onAddToAppleWallet={handleAppleWalletPass}
+          isApplePassLoading={isApplePassLoading}
+          googleWalletAvailable={googleWalletSupported}
+          googleWalletSupportMessage={googleWalletSupportMessage}
+          onAddToGoogleWallet={handleGoogleWalletPass}
+          isGooglePassLoading={isGooglePassLoading}
+        />
 
         {/* ── Bottom CTA ── */}
         <section className="pb-12">

@@ -10,7 +10,10 @@ import resources from '../../resources/resources';
 import { generateInvestorProfile } from '../../services/investorProfile/apiClient';
 import {
   APPLE_WALLET_SUPPORT_MESSAGE,
+  buildGoldPassPreviewModel,
   downloadHushhGoldPass,
+  fetchGoogleWalletAvailability,
+  GOOGLE_WALLET_SUPPORT_MESSAGE,
   isAppleWalletSupported,
   launchGoogleWalletPass,
 } from '../../services/walletPass';
@@ -120,6 +123,11 @@ export const useHushhUserProfileLogic = () => {
   const [hasOnboardingData, setHasOnboardingData] = useState(false);
   const [isApplePassLoading, setIsApplePassLoading] = useState(false);
   const [isGooglePassLoading, setIsGooglePassLoading] = useState(false);
+  const [isWalletPreviewOpen, setIsWalletPreviewOpen] = useState(false);
+  const [googleWalletSupported, setGoogleWalletSupported] = useState(false);
+  const [googleWalletSupportMessage, setGoogleWalletSupportMessage] = useState(
+    GOOGLE_WALLET_SUPPORT_MESSAGE
+  );
   const [editingField, setEditingField] = useState<string | null>(null);
   // Dirty tracking — true when user manually edits any form field
   const [isDirty, setIsDirty] = useState(false);
@@ -164,6 +172,20 @@ export const useHushhUserProfileLogic = () => {
       }
     };
   }, [investorStatus, loading, stopTimer]);
+
+  useEffect(() => {
+    let active = true;
+
+    fetchGoogleWalletAvailability().then((availability) => {
+      if (!active) return;
+      setGoogleWalletSupported(availability.available);
+      setGoogleWalletSupportMessage(availability.message);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Field options for AI-generated profile editing
   const FIELD_OPTIONS: Record<string, { value: string; label: string }[]> = {
@@ -731,6 +753,16 @@ export const useHushhUserProfileLogic = () => {
 
   // Handle Google Wallet pass
   const handleGoogleWalletPass = async () => {
+    if (!googleWalletSupported) {
+      toast({
+        title: "Google Wallet unavailable",
+        description: googleWalletSupportMessage,
+        status: "info",
+        duration: 4000,
+      });
+      return;
+    }
+
     if (!form.name) {
       toast({
         title: "Name required",
@@ -839,10 +871,23 @@ export const useHushhUserProfileLogic = () => {
     return "border-slate-200 bg-white/80 text-slate-600";
   };
 
+  const walletPreview = buildGoldPassPreviewModel({
+    name: form.name || "Hushh Investor",
+    email: form.email || null,
+    organisation: form.organisation || null,
+    slug: profileSlug,
+    userId,
+    investmentAmount:
+      typeof form.initialInvestmentAmount === "number"
+        ? form.initialInvestmentAmount
+        : null,
+  });
+
   return {
     form, setForm, userId, investorProfile, setInvestorProfile, profileSlug,
     loading, loadingSeconds, isProcessing, investorStatus,
     setLoading, hasOnboardingData, isApplePassLoading, isGooglePassLoading,
+    isWalletPreviewOpen, googleWalletSupported, googleWalletSupportMessage,
     appleWalletSupported, appleWalletSupportMessage: APPLE_WALLET_SUPPORT_MESSAGE,
     editingField, setEditingField, nwsResult, nwsLoading,
     isFooterVisible, hasCopied, onCopy, profileUrl, navigate, toast,
@@ -850,6 +895,9 @@ export const useHushhUserProfileLogic = () => {
     isDirty, isSaving, handleSaveChanges,
     handleUpdateAIField, handleMultiSelectToggle, handleChange, handleSubmit,
     handleBack, handleSave, handleAppleWalletPass, handleGoogleWalletPass,
+    openWalletPreview: () => setIsWalletPreviewOpen(true),
+    closeWalletPreview: () => setIsWalletPreviewOpen(false),
+    walletPreview,
     handleShareWhatsApp, handleShareX, handleShareEmail, handleShareLinkedIn, handleOpenProfile,
     inputClassName, selectClassName, labelClassName, cardClassName,
     aiFieldCardTones, getConfidenceLabel, getConfidenceBadgeClass,

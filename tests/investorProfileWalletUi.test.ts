@@ -34,16 +34,23 @@ describe("InvestorProfile wallet UI", () => {
       userData: null,
       isApplePassLoading: false,
       isGooglePassLoading: false,
+      isWalletPreviewOpen: false,
       appleWalletSupported: false,
       appleWalletSupportMessage:
         "Available on iPhone in Wallet-supported browsers.",
+      googleWalletSupported: false,
+      googleWalletSupportMessage:
+        "Google Wallet is temporarily unavailable while we finish the wallet issuer setup.",
       profileUrl: "https://hushhtech.com/investor/test-user",
+      walletPreview: null,
       handleFormSubmit: vi.fn(),
       handleProfileConfirm: vi.fn(),
       handleCopyURL: vi.fn(),
       handleShare: vi.fn(),
       handleAppleWalletDownload: vi.fn(),
       handleGoogleWalletDownload: vi.fn(),
+      openWalletPreview: vi.fn(),
+      closeWalletPreview: vi.fn(),
     });
   });
 
@@ -55,7 +62,7 @@ describe("InvestorProfile wallet UI", () => {
     vi.clearAllMocks();
   });
 
-  it("disables Apple Wallet and shows the unsupported-device note", async () => {
+  it("renders preview and disables unsupported wallet actions with notes", async () => {
     await act(async () => {
       root.render(
         React.createElement(
@@ -72,8 +79,12 @@ describe("InvestorProfile wallet UI", () => {
 
     expect(appleButton).not.toBeNull();
     expect(appleButton?.disabled).toBe(true);
+    expect(container.textContent).toContain("Preview Card");
     expect(container.textContent).toContain(
       "Available on iPhone in Wallet-supported browsers."
+    );
+    expect(container.textContent).toContain(
+      "Google Wallet is temporarily unavailable while we finish the wallet issuer setup."
     );
   });
 });
