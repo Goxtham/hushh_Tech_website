@@ -4,6 +4,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    environmentOptions: {
+      jsdom: {
+        resources: 'usable',
+      },
+    },
     include: ['tests/**/*.test.ts'],
     exclude: [
       'node_modules/**',
